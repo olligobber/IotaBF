@@ -7,17 +7,18 @@ module Reducible
 	, Var(..)
 	) where
 
-infix 5 $$
+infixl 5 $$
 
 -- Types that support some notion of application
 class Appliable t where
 	($$) :: t -> t -> t
 
--- Types that can act as functions, taking in inputs (a) to produce a tree (t)
+-- Types that can act as functions over some other type
+-- todo is appliable superclass needed?
 class Appliable t => Reducible t a where
 	-- Number of inputs to the function and the reduction function,
 	-- or Nothing if it is irreducible
-	-- The reduction function will fail if given the wrong number of inputs
+	-- The reduction function should fail if given the wrong number of inputs
 	reducible :: a -> Maybe (Integer, [t] -> t)
 
 -- A type that cannot be reduced

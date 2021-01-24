@@ -17,7 +17,7 @@ data SKI = S | K | I deriving (Eq, Ord, Show, Read)
 instance Appliable t => Reducible t SKI where
 	reducible S = Just (3,
 		\l -> case l of
-			[x,y,z] -> (x $$ z) $$ (y $$ z)
+			[x,y,z] -> x $$ z $$ (y $$ z)
 			_ -> error "Wrong number of arguments"
 		)
 	reducible K = Just (2,
