@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module BinaryTree
 	( BinaryTree(..)
@@ -7,12 +8,15 @@ module BinaryTree
 	, renderL
 	, renderR
 	, treeParser
+	, treeParserL
+	, treeParserR
 	) where
 
 import Data.Function (on)
 import Control.Applicative (liftA2, (<|>))
 import qualified Text.Parsec as P
 import Text.Parsec (ParsecT)
+import Control.Monad.Trans (lift)
 
 -- Simple binary tree with balues stored in leaves
 data BinaryTree a = Leaf a | (:^:) (BinaryTree a) (BinaryTree a)
@@ -80,26 +84,71 @@ In general, brackets are assumed to be part of the tree structure, and in
 cases where a leaf node may or may not exist, it is assumed to not exist.
 -}
 
-treeParser :: forall u m a.
-	Monad m => ParsecT String u m a -> ParsecT String u m (BinaryTree a)
-treeParser leafParser = conc <$> firstParser <*> secondParser where
-
-	conc :: BinaryTree a -> Maybe (BinaryTree a) -> BinaryTree a
-	conc t Nothing = t
-	conc l (Just r) = l :^: r
+-- Use a leaf parser and combine with brackets
+treeParser :: forall s u m a.
+	P.Stream s m Char => ParsecT s u m a -> ParsecT s u m (BinaryTree a)
+treeParser leafParser = foldl (:^:) <$> firstParser <*> secondParser where
 
 	-- bracketed tree or leaf
-	firstParser :: ParsecT String u m (BinaryTree a)
+	firstParser :: ParsecT s u m (BinaryTree a)
 	firstParser =
 		P.char '(' *> treeParser leafParser <* P.char ')' <|>
 		Leaf <$> leafParser
 
 	-- nothing or bracketed tree or leaf
-	secondParser :: ParsecT String u m (Maybe (BinaryTree a))
+	secondParser :: ParsecT s u m (Maybe (BinaryTree a))
 	secondParser = do
 		-- Follow sets don't work properly by default...
-		rest <- P.getInput
+		rest <- P.getInput >>= lift . P.uncons
 		case rest of
-			[] -> pure Nothing
-			')':_ -> pure Nothing
+			Nothing -> pure Nothing
+			Just (')',_) -> pure Nothing
 			_ -> Just <$> firstParser
+
+-- Parse but assume left associativity
+treeParserL :: forall s u m a.
+	P.Stream s m Char => ParsecT s u m a -> ParsecT s u m (BinaryTree a)
+treeParserL leafParser = foldl1 (:^:) <$> manyParser where
+
+	-- 1 or more children nodes
+	manyParser :: ParsecT s u m [BinaryTree a]
+	manyParser = (:) <$> childParser <*> someParser
+
+	-- 0 or more children nodes
+	someParser :: ParsecT s u m [BinaryTree a]
+	someParser = do
+		rest <- P.getInput >>= lift . P.uncons
+		case rest of
+			Nothing -> pure []
+			Just (')',_) -> pure []
+			_ -> manyParser
+
+	-- bracketed tree or leaf
+	childParser :: ParsecT s u m (BinaryTree a)
+	childParser =
+		P.char '(' *> treeParser leafParser <* P.char ')' <|>
+		Leaf <$> leafParser
+
+-- Parse but assume right associativity
+treeParserR :: forall s u m a.
+	P.Stream s m Char => ParsecT s u m a -> ParsecT s u m (BinaryTree a)
+treeParserR leafParser = foldr1 (:^:) <$> manyParser where
+
+	-- 1 or more children nodes
+	manyParser :: ParsecT s u m [BinaryTree a]
+	manyParser = (:) <$> childParser <*> someParser
+
+	-- 0 or more children nodes
+	someParser :: ParsecT s u m [BinaryTree a]
+	someParser = do
+		rest <- P.getInput >>= lift . P.uncons
+		case rest of
+			Nothing -> pure []
+			Just (')',_) -> pure []
+			_ -> manyParser
+
+	-- bracketed tree or leaf
+	childParser :: ParsecT s u m (BinaryTree a)
+	childParser =
+		P.char '(' *> treeParser leafParser <* P.char ')' <|>
+		Leaf <$> leafParser
