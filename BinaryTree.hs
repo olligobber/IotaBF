@@ -10,14 +10,17 @@ module BinaryTree
 	, treeParser
 	, treeParserL
 	, treeParserR
+	, leftmostStep
+	, leftmostReduce
 	) where
 
 import Data.Function (on)
 import Control.Applicative (liftA2, (<|>))
 import qualified Text.Parsec as P
-import Text.Parsec (ParsecT)
 
--- Simple binary tree with balues stored in leaves
+import Reducible
+
+-- Simple binary tree with values stored in leaves
 data BinaryTree a = Leaf a | (:^:) (BinaryTree a) (BinaryTree a)
 	deriving (Eq, Ord)
 
@@ -85,17 +88,17 @@ cases where a leaf node may or may not exist, it is assumed to not exist.
 
 -- Use a leaf parser and combine with brackets
 treeParser :: forall s u m a.
-	P.Stream s m Char => ParsecT s u m a -> ParsecT s u m (BinaryTree a)
+	P.Stream s m Char => P.ParsecT s u m a -> P.ParsecT s u m (BinaryTree a)
 treeParser leafParser = foldl (:^:) <$> firstParser <*> secondParser where
 
 	-- bracketed tree or leaf
-	firstParser :: ParsecT s u m (BinaryTree a)
+	firstParser :: P.ParsecT s u m (BinaryTree a)
 	firstParser =
 		P.char '(' *> treeParser leafParser <* P.char ')' <|>
 		Leaf <$> leafParser
 
 	-- nothing or bracketed tree or leaf
-	secondParser :: ParsecT s u m (Maybe (BinaryTree a))
+	secondParser :: P.ParsecT s u m (Maybe (BinaryTree a))
 	secondParser =
 		-- Follow sets don't work by default
 		Nothing <$ P.lookAhead (P.eof <|> () <$ P.char ')') <|>
@@ -104,44 +107,73 @@ treeParser leafParser = foldl (:^:) <$> firstParser <*> secondParser where
 
 -- Parse but assume left associativity
 treeParserL :: forall s u m a.
-	P.Stream s m Char => ParsecT s u m a -> ParsecT s u m (BinaryTree a)
+	P.Stream s m Char => P.ParsecT s u m a -> P.ParsecT s u m (BinaryTree a)
 treeParserL leafParser = foldl1 (:^:) <$> manyParser where
 
 	-- 1 or more children nodes
-	manyParser :: ParsecT s u m [BinaryTree a]
+	manyParser :: P.ParsecT s u m [BinaryTree a]
 	manyParser = (:) <$> childParser <*> someParser
 
 	-- 0 or more children nodes
-	someParser :: ParsecT s u m [BinaryTree a]
+	someParser :: P.ParsecT s u m [BinaryTree a]
 	someParser =
 		[] <$ P.lookAhead (P.eof <|> () <$ P.char ')') <|>
 		manyParser <|>
 		pure []
 
 	-- bracketed tree or leaf
-	childParser :: ParsecT s u m (BinaryTree a)
+	childParser :: P.ParsecT s u m (BinaryTree a)
 	childParser =
 		P.char '(' *> treeParserL leafParser <* P.char ')' <|>
 		Leaf <$> leafParser
 
 -- Parse but assume right associativity
 treeParserR :: forall s u m a.
-	P.Stream s m Char => ParsecT s u m a -> ParsecT s u m (BinaryTree a)
+	P.Stream s m Char => P.ParsecT s u m a -> P.ParsecT s u m (BinaryTree a)
 treeParserR leafParser = foldr1 (:^:) <$> manyParser where
 
 	-- 1 or more children nodes
-	manyParser :: ParsecT s u m [BinaryTree a]
+	manyParser :: P.ParsecT s u m [BinaryTree a]
 	manyParser = (:) <$> childParser <*> someParser
 
 	-- 0 or more children nodes
-	someParser :: ParsecT s u m [BinaryTree a]
+	someParser :: P.ParsecT s u m [BinaryTree a]
 	someParser =
 		[] <$ P.lookAhead (P.eof <|> () <$ P.char ')') <|>
 		manyParser <|>
 		pure []
 
 	-- bracketed tree or leaf
-	childParser :: ParsecT s u m (BinaryTree a)
+	childParser :: P.ParsecT s u m (BinaryTree a)
 	childParser =
 		P.char '(' *> treeParserR leafParser <* P.char ')' <|>
 		Leaf <$> leafParser
+
+-- Get the leftmost element and its depth
+leftEleDepth :: BinaryTree a -> (a, Integer)
+leftEleDepth (Leaf x) = (x,0)
+leftEleDepth (l :^: _) = succ <$> leftEleDepth l
+
+-- Get the sequence of siblings of left descendents from bottom up
+leftDescendantSiblings :: BinaryTree a -> [BinaryTree a]
+leftDescendantSiblings = helper [] where
+	helper list (Leaf _) = list
+	helper list (l :^: r) = helper (r : list) l
+
+-- Perform a step of leftmost reduction if possible
+leftmostStep ::
+	Reducible (BinaryTree a) a => BinaryTree a -> Maybe (BinaryTree a)
+leftmostStep (Leaf x) = case reducible x of
+	Just (0, reduce) -> Just $ reduce []
+	_ -> Nothing
+leftmostStep t@(l :^: r) = case reducible leftEle of
+	Nothing -> Nothing
+	Just (i, _) | i > leftDepth -> Nothing
+	Just (i, _) | i < leftDepth -> (:^: r) <$> leftmostStep l
+	Just (_, reduce) -> Just $ reduce $ leftDescendantSiblings t
+	where
+		(leftEle, leftDepth) = leftEleDepth t
+
+-- Perform a leftmost reduction
+leftmostReduce :: Reducible (BinaryTree a) a => BinaryTree a -> BinaryTree a
+leftmostReduce t = maybe t leftmostReduce $ leftmostStep t
