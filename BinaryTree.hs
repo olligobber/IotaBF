@@ -99,7 +99,8 @@ treeParser leafParser = foldl (:^:) <$> firstParser <*> secondParser where
 	secondParser =
 		-- Follow sets don't work by default
 		Nothing <$ P.lookAhead (P.eof <|> () <$ P.char ')') <|>
-		Just <$> firstParser
+		Just <$> firstParser <|>
+		pure Nothing
 
 -- Parse but assume left associativity
 treeParserL :: forall s u m a.
@@ -114,12 +115,13 @@ treeParserL leafParser = foldl1 (:^:) <$> manyParser where
 	someParser :: ParsecT s u m [BinaryTree a]
 	someParser =
 		[] <$ P.lookAhead (P.eof <|> () <$ P.char ')') <|>
-		manyParser
+		manyParser <|>
+		pure []
 
 	-- bracketed tree or leaf
 	childParser :: ParsecT s u m (BinaryTree a)
 	childParser =
-		P.char '(' *> treeParser leafParser <* P.char ')' <|>
+		P.char '(' *> treeParserL leafParser <* P.char ')' <|>
 		Leaf <$> leafParser
 
 -- Parse but assume right associativity
@@ -135,10 +137,11 @@ treeParserR leafParser = foldr1 (:^:) <$> manyParser where
 	someParser :: ParsecT s u m [BinaryTree a]
 	someParser =
 		[] <$ P.lookAhead (P.eof <|> () <$ P.char ')') <|>
-		manyParser
+		manyParser <|>
+		pure []
 
 	-- bracketed tree or leaf
 	childParser :: ParsecT s u m (BinaryTree a)
 	childParser =
-		P.char '(' *> treeParser leafParser <* P.char ')' <|>
+		P.char '(' *> treeParserR leafParser <* P.char ')' <|>
 		Leaf <$> leafParser
