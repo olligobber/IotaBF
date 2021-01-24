@@ -16,7 +16,6 @@ import Data.Function (on)
 import Control.Applicative (liftA2, (<|>))
 import qualified Text.Parsec as P
 import Text.Parsec (ParsecT)
-import Control.Monad.Trans (lift)
 
 -- Simple binary tree with balues stored in leaves
 data BinaryTree a = Leaf a | (:^:) (BinaryTree a) (BinaryTree a)
@@ -97,13 +96,10 @@ treeParser leafParser = foldl (:^:) <$> firstParser <*> secondParser where
 
 	-- nothing or bracketed tree or leaf
 	secondParser :: ParsecT s u m (Maybe (BinaryTree a))
-	secondParser = do
-		-- Follow sets don't work properly by default...
-		rest <- P.getInput >>= lift . P.uncons
-		case rest of
-			Nothing -> pure Nothing
-			Just (')',_) -> pure Nothing
-			_ -> Just <$> firstParser
+	secondParser =
+		-- Follow sets don't work by default
+		Nothing <$ P.lookAhead (P.eof <|> () <$ P.char ')') <|>
+		Just <$> firstParser
 
 -- Parse but assume left associativity
 treeParserL :: forall s u m a.
@@ -116,12 +112,9 @@ treeParserL leafParser = foldl1 (:^:) <$> manyParser where
 
 	-- 0 or more children nodes
 	someParser :: ParsecT s u m [BinaryTree a]
-	someParser = do
-		rest <- P.getInput >>= lift . P.uncons
-		case rest of
-			Nothing -> pure []
-			Just (')',_) -> pure []
-			_ -> manyParser
+	someParser =
+		[] <$ P.lookAhead (P.eof <|> () <$ P.char ')') <|>
+		manyParser
 
 	-- bracketed tree or leaf
 	childParser :: ParsecT s u m (BinaryTree a)
@@ -140,12 +133,9 @@ treeParserR leafParser = foldr1 (:^:) <$> manyParser where
 
 	-- 0 or more children nodes
 	someParser :: ParsecT s u m [BinaryTree a]
-	someParser = do
-		rest <- P.getInput >>= lift . P.uncons
-		case rest of
-			Nothing -> pure []
-			Just (')',_) -> pure []
-			_ -> manyParser
+	someParser =
+		[] <$ P.lookAhead (P.eof <|> () <$ P.char ')') <|>
+		manyParser
 
 	-- bracketed tree or leaf
 	childParser :: ParsecT s u m (BinaryTree a)
