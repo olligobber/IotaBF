@@ -1,13 +1,20 @@
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 
 module Reducible
-	( Reducible(..)
+	( Appliable(..)
+	, Reducible(..)
 	, Var(..)
 	) where
 
+infix 5 $$
+
+-- Types that support some notion of application
+class Appliable t where
+	($$) :: t -> t -> t
+
 -- Types that can act as functions, taking in inputs (a) to produce a tree (t)
-class Reducible t a | t -> a where
+class Appliable t => Reducible t a where
 	-- Number of inputs to the function and the reduction function,
 	-- or Nothing if it is irreducible
 	-- The reduction function will fail if given the wrong number of inputs
@@ -36,5 +43,9 @@ instance Applicative Var where
 instance Monad Var where
 	Var x >>= f = f x
 
-instance Reducible (t (Var x)) (Var x) where
+instance Appliable t => Reducible t (Var x) where
 	reducible _ = Nothing
+
+instance (Reducible t x, Reducible t y) => Reducible t (Either x y) where
+	reducible (Left x) = reducible x
+	reducible (Right x) = reducible x

@@ -18,7 +18,7 @@ import Data.Function (on)
 import Control.Applicative (liftA2, (<|>))
 import qualified Text.Parsec as P
 
-import Reducible
+import Reducible (Appliable(..), Reducible(..))
 
 -- Simple binary tree with values stored in leaves
 data BinaryTree a = Leaf a | (:^:) (BinaryTree a) (BinaryTree a)
@@ -53,6 +53,9 @@ instance Applicative BinaryTree where
 instance Monad BinaryTree where
 	Leaf x >>= f = f x
 	l :^: r >>= f = ((:^:) `on` (>>= f)) l r
+
+instance Appliable (BinaryTree x) where
+	($$) = (:^:)
 
 -- Switch left children to right children and vice versa
 invert :: BinaryTree a -> BinaryTree a
@@ -157,6 +160,7 @@ leftEleDepth (l :^: _) = succ <$> leftEleDepth l
 -- Get the sequence of siblings of left descendents from bottom up
 leftDescendantSiblings :: BinaryTree a -> [BinaryTree a]
 leftDescendantSiblings = helper [] where
+	helper :: [BinaryTree a] -> BinaryTree a -> [BinaryTree a]
 	helper list (Leaf _) = list
 	helper list (l :^: r) = helper (r : list) l
 

@@ -4,20 +4,32 @@
 
 module SKI
 	( SKI(..)
+	, skiParser
 	) where
 
 import Control.Applicative ((<|>))
 import qualified Text.Parsec as P
 
-import BinaryTree (BinaryTree((:^:)))
-import Reducible (Reducible(..))
+import Reducible (Appliable(..), Reducible(..))
 
 data SKI = S | K | I deriving (Eq, Ord, Show, Read)
 
-instance Reducible (BinaryTree SKI) SKI where
-	reducible S = Just (3, \[x,y,z] -> (x :^: z) :^: (y :^: z))
-	reducible K = Just (2, \[x,y] -> x)
-	reducible I = Just (1, \[x] -> x)
+instance Appliable t => Reducible t SKI where
+	reducible S = Just (3,
+		\l -> case l of
+			[x,y,z] -> (x $$ z) $$ (y $$ z)
+			_ -> error "Wrong number of arguments"
+		)
+	reducible K = Just (2,
+		\l -> case l of
+			[x,_] -> x
+			_ -> error "Wrong number of arguments"
+		)
+	reducible I = Just (1,
+		\l -> case l of
+			[x] -> x
+			_ -> error "Wrong number of arguments"
+		)
 
 skiParser :: P.Stream s m Char => P.ParsecT s u m SKI
 skiParser =
