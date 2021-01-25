@@ -6,6 +6,7 @@
 module SKI
 	( SKI(..)
 	, skiParser
+	, HasSKI(..)
 	) where
 
 import Control.Applicative ((<|>))
@@ -38,3 +39,19 @@ skiParser =
 	S <$ P.char 'S' <|>
 	K <$ P.char 'K' <|>
 	I <$ P.char 'I'
+
+-- Class of types that include some repesentation of SKI combinators
+class HasSKI t where
+	s :: t
+	k :: t
+	i :: t
+
+instance HasSKI SKI where
+	s = S
+	k = K
+	i = I
+
+instance (Applicative f, HasSKI x) => HasSKI (f x) where
+	s = pure s
+	k = pure k
+	i = pure i
