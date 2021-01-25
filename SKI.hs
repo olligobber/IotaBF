@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
 
 module SKI
 	( SKI(..)
@@ -12,21 +13,22 @@ import qualified Text.Parsec as P
 
 import Reducible (Appliable(..), Reducible(..))
 
+-- Combinators in SKI calculus
 data SKI = S | K | I deriving (Eq, Ord, Show, Read)
 
 instance Appliable t => Reducible t SKI where
 	reducible S = Just (3,
-		\l -> case l of
+		\case
 			[x,y,z] -> x $$ z $$ (y $$ z)
 			_ -> error "Wrong number of arguments"
 		)
 	reducible K = Just (2,
-		\l -> case l of
+		\case
 			[x,_] -> x
 			_ -> error "Wrong number of arguments"
 		)
 	reducible I = Just (1,
-		\l -> case l of
+		\case
 			[x] -> x
 			_ -> error "Wrong number of arguments"
 		)

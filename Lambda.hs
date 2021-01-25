@@ -15,12 +15,15 @@ import Data.Void (Void)
 import BinaryTree (BinaryTree(..), renderL)
 import Reducible (Appliable(..))
 
+-- A leaf in the application tree of lambda calculus
 data LambdaTerm v = Abstraction (Lambda v) | Bound Int | Free v
 	deriving (Eq, Ord, Show)
 
+-- A term in lambda calculus
 newtype Lambda v = Lambda { getTree :: BinaryTree (LambdaTerm v) }
 	deriving (Eq, Ord)
 
+-- Lambda term with no free variables
 type LambdaCombinator = Lambda Void
 
 instance Functor LambdaTerm where
@@ -77,9 +80,11 @@ instance Show v => Show (Lambda v) where
 instance Appliable (Lambda v) where
 	Lambda x $$ Lambda y = Lambda $ x :^: y
 
+-- Simple free variable
 free :: v -> Lambda v
 free = Lambda . Leaf . Free
 
+-- M[Nothing] => \x.M[x]
 abstract :: Lambda (Maybe v) -> Lambda v
 abstract (Lambda t) = Lambda $ Leaf $ Abstraction $ Lambda $ bindWith 1 <$> t
 	where
@@ -90,6 +95,7 @@ abstract (Lambda t) = Lambda $ Leaf $ Abstraction $ Lambda $ bindWith 1 <$> t
 		bindWith _ (Free (Just v)) = Free v
 		bindWith n (Free Nothing) = Bound n
 
+-- Infinite list of variable names used for rendering bound variables
 variableNames :: [String]
 variableNames = flip (:) <$> (flip replicate '\'' <$> [0..]) <*> ['a'..'z']
 
