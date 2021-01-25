@@ -3,6 +3,7 @@
 
 module BinaryTree
 	( BinaryTree(..)
+	, fromBinaryTree
 	, invert
 	, render
 	, renderL
@@ -56,6 +57,10 @@ instance Monad BinaryTree where
 
 instance Appliable (BinaryTree x) where
 	($$) = (:^:)
+
+fromBinaryTree :: Appliable t => BinaryTree t -> t
+fromBinaryTree (Leaf x) = x
+fromBinaryTree (l :^: r) = (($$) `on` fromBinaryTree) l r
 
 -- Switch left children to right children and vice versa
 invert :: BinaryTree a -> BinaryTree a

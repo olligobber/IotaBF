@@ -1,5 +1,10 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Lambda
 	( LambdaTerm(..)
@@ -8,12 +13,17 @@ module Lambda
 	, free
 	, abstract
 	, render
+	, substitute
+	, leftmostStep
+	, leftmostReduce
 	) where
 
 import Data.Void (Void)
+import qualified Data.Set as S
 
-import BinaryTree (BinaryTree(..), renderL)
-import Reducible (Appliable(..))
+import BinaryTree (BinaryTree(..), renderL, fromBinaryTree)
+import qualified BinaryTree as BT
+import Reducible (Appliable(..), Reducible(..))
 
 -- A leaf in the application tree of lambda calculus
 data LambdaTerm v = Abstraction (Lambda v) | Bound Int | Free v
@@ -99,24 +109,58 @@ abstract (Lambda t) = Lambda $ Leaf $ Abstraction $ Lambda $ bindWith 1 <$> t
 variableNames :: [String]
 variableNames = flip (:) <$> (flip replicate '\'' <$> [0..]) <*> ['a'..'z']
 
--- Uses lowercase letters to render free variables, and adds primes (') when
--- it runs out
--- Todo remove free variables form list of available variable names
+-- Uses lowercase letters to render bound variables, and adds primes (') when
+-- it runs out, and skipping any names already used by free variables
 render :: forall v. (v -> String) -> Lambda v -> String
-render renderVar = renderDepth 0 where
+render renderVar top = renderDepth 0 top where
 
 	renderDepth :: Int -> Lambda v -> String
 	renderDepth d (Lambda x) = renderL (renderTerm d) x
 
 	renderTerm :: Int -> LambdaTerm v -> String
-	-- todo collect nested abstractions and render together
+	renderTerm d (Abstraction l@(Lambda (Leaf (Abstraction _)))) =
+		"(λ" <> availVariables !! d <> drop 2 (renderDepth (d+1) l)
 	renderTerm d (Abstraction l) =
-		"(λ" <> variableNames !! d <> "." <> renderDepth (d+1) l <> ")"
-	renderTerm d (Bound i) = variableNames !! (d-i)
+		"(λ" <> availVariables !! d <> "." <> renderDepth (d+1) l <> ")"
+	renderTerm d (Bound i) = availVariables !! (d-i)
 	renderTerm _ (Free v) = renderVar v
 
--- Todo substitution
+	availVariables :: [String]
+	availVariables = filter (`notElem` freeVariables) variableNames
 
--- Todo reducible instance
+	freeVariables :: S.Set String
+	freeVariables = foldMap (S.singleton . renderVar) top
+
+-- Applies one lambda to another, assuming the first would be wrapped in an
+-- abstraction, and neither contains variables bound beyond the current scope
+substitute :: forall v. Lambda v -> Lambda v -> Lambda v
+substitute (Lambda t) (Lambda x) = Lambda $ t >>= replaceBound 1
+	where
+		-- Replaces bound variables of a given index with x
+		replaceBound :: Int -> LambdaTerm v -> BinaryTree (LambdaTerm v)
+		replaceBound n (Abstraction (Lambda l)) =
+			Leaf $ Abstraction $ Lambda $ l >>= replaceBound (n+1)
+		replaceBound n (Bound i) | n == i = x
+		replaceBound _ y = Leaf y
+
+instance Reducible (BinaryTree (LambdaTerm v)) v =>
+	Reducible (BinaryTree (LambdaTerm v)) (LambdaTerm v) where
+	reducible (Abstraction l) = Just (1, \case
+		[x] -> getTree $ substitute l $ Lambda x
+		_ -> error "Wrong number of arguments"
+		)
+	reducible (Bound _) = Nothing
+	reducible (Free x) = reducible x
+
+-- Perform a step of leftmost reduction if possible
+leftmostStep ::
+	Reducible (BinaryTree (LambdaTerm v)) v => Lambda v -> Maybe (Lambda v)
+leftmostStep (Lambda l) =
+	fromBinaryTree . fmap (Lambda . Leaf) <$> BT.leftmostStep l
+
+-- Perform a leftmost reduction
+leftmostReduce ::
+	Reducible (BinaryTree (LambdaTerm v)) v => Lambda v -> Lambda v
+leftmostReduce l = maybe l leftmostReduce $ leftmostStep l
 
 -- Todo parser

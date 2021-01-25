@@ -7,6 +7,8 @@ module Reducible
 	, Var(..)
 	) where
 
+import Data.Void (Void, absurd)
+
 infixl 5 $$
 
 -- Types that support some notion of application
@@ -20,6 +22,9 @@ class Reducible t a where
 	-- or Nothing if it is irreducible
 	-- The reduction function should fail if given the wrong number of inputs
 	reducible :: a -> Maybe (Integer, [t] -> t)
+
+instance Reducible t Void where
+	reducible = absurd
 
 -- A type that cannot be reduced
 newtype Var x = Var { getVar :: x } deriving (Eq, Ord)
