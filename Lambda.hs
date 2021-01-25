@@ -16,12 +16,18 @@ module Lambda
 	, substitute
 	, leftmostStep
 	, leftmostReduce
+	, lambdaParser
 	) where
 
 import Data.Void (Void)
 import qualified Data.Set as S
+import qualified Text.Parsec as P
+import qualified Data.Map as M
+import Control.Monad.Reader (ReaderT, runReaderT, asks, local, mapReaderT)
+import Control.Monad.Trans (lift)
+import Control.Applicative ((<|>))
 
-import BinaryTree (BinaryTree(..), renderL, fromBinaryTree)
+import BinaryTree (BinaryTree(..), renderL, fromBinaryTree, treeParserL)
 import qualified BinaryTree as BT
 import Reducible (Appliable(..), Reducible(..))
 
@@ -163,4 +169,57 @@ leftmostReduce ::
 	Reducible (BinaryTree (LambdaTerm v)) v => Lambda v -> Lambda v
 leftmostReduce l = maybe l leftmostReduce $ leftmostStep l
 
--- Todo parser
+data BoundState = BoundState
+	-- How many abstractions deep was a variable bound
+	(M.Map String Int)
+	-- How many abstractions deep are we now
+	Int
+
+-- Take in a free variable parser and make a lambda calculus parser
+lambdaParser :: forall s u m a.
+	P.Stream s m Char => P.ParsecT s u m a -> P.ParsecT s u m (Lambda a)
+lambdaParser freeParser = runReaderT lambdaParserR emptyBoundState where
+
+	lambdaParserR :: ReaderT BoundState (P.ParsecT s u m) (Lambda a)
+	lambdaParserR = Lambda <$> mapReaderT treeParserL lambdaTermParser
+
+	fullAbstractionParser ::
+		ReaderT BoundState (P.ParsecT s u m) (LambdaTerm a)
+	fullAbstractionParser =
+		lift (P.char '\\' <|> P.char 'λ') *> partAbstractionParser
+
+	partAbstractionParser ::
+		ReaderT BoundState (P.ParsecT s u m) (LambdaTerm a)
+	partAbstractionParser = lift variableParser >>= \var ->
+		fmap Abstraction $ local (updateBoundState var) $
+			lift (P.char '.') *> lambdaParserR <|>
+			Lambda . Leaf <$> partAbstractionParser
+
+	boundVariableParser :: ReaderT BoundState (P.ParsecT s u m) Int
+	boundVariableParser = mapReaderT P.try $ do
+		var <- lift variableParser
+		Just i <- asks $ getIndex var
+		return i
+
+	lambdaTermParser :: ReaderT BoundState (P.ParsecT s u m) (LambdaTerm a)
+	lambdaTermParser =
+		fullAbstractionParser <|>
+		Bound <$> boundVariableParser <|>
+		Free <$> lift freeParser
+
+	variableParser :: P.ParsecT s u m String
+	variableParser = (:) <$> P.oneOf ['a'..'z'] <*> P.many (P.char '\'')
+
+	-- Initial state, nothing bound
+	emptyBoundState :: BoundState
+	emptyBoundState = BoundState M.empty 0
+
+	-- Bind a new variable
+	updateBoundState :: String -> BoundState -> BoundState
+	updateBoundState newvar (BoundState m d) = BoundState
+		(M.insert newvar d m)
+		(d+1)
+
+	-- Get the DeBruijn index of a variable if it is bound
+	getIndex :: String -> BoundState -> Maybe Int
+	getIndex var (BoundState m d) = (d-) <$> M.lookup var m

@@ -16,7 +16,9 @@ infixl 5 $$
 class Appliable t where
 	($$) :: t -> t -> t
 
--- Types that can act as functions over some other type
+-- Types that can act as functions over some other input type
+-- The second (function) type should have exactly one instance declaration
+-- (but could have multiple first (input) types) to avoid overlapping instances
 class Reducible t a where
 	-- Number of inputs to the function and the reduction function,
 	-- or Nothing if it is irreducible
