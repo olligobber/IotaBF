@@ -1,7 +1,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE InstanceSigs #-}
 
 module Lambda
-	( Lambda
+	( LambdaTerm(..)
+	, Lambda(..)
 	, LambdaCombinator
 	, free
 	, abstract
@@ -14,7 +16,12 @@ import BinaryTree (BinaryTree(..), renderL)
 import Reducible (Appliable(..))
 
 data LambdaTerm v = Abstraction (Lambda v) | Bound Int | Free v
+	deriving (Eq, Ord, Show)
+
+newtype Lambda v = Lambda { getTree :: BinaryTree (LambdaTerm v) }
 	deriving (Eq, Ord)
+
+type LambdaCombinator = Lambda Void
 
 instance Functor LambdaTerm where
 	fmap f (Abstraction l) = Abstraction $ f <$> l
@@ -31,10 +38,16 @@ instance Traversable LambdaTerm where
 	sequenceA (Bound i) = pure $ Bound i
 	sequenceA (Free x) = Free <$> x
 
-newtype Lambda v = Lambda (BinaryTree (LambdaTerm v))
-	deriving (Eq, Ord)
+instance Applicative LambdaTerm where
+	pure = Free
+	Abstraction (Lambda f) <*> x = Abstraction $ Lambda $ (<*> x) <$> f
+	Bound i <*> _ = Bound i
+	Free f <*> x = f <$> x
 
-type LambdaCombinator = Lambda Void
+instance Monad LambdaTerm where
+	Abstraction (Lambda x) >>= f = Abstraction $ Lambda $ (>>= f) <$> x
+	Bound i >>= _ = Bound i
+	Free x >>= f = f x
 
 instance Functor Lambda where
 	fmap f (Lambda x) = Lambda $ fmap f <$> x
@@ -45,7 +58,21 @@ instance Foldable Lambda where
 instance Traversable Lambda where
 	sequenceA (Lambda x) = Lambda <$> traverse sequenceA x
 
--- todo applicative and monad instances
+instance Applicative Lambda where
+	pure = free
+	Lambda f <*> Lambda x = Lambda $ (<*>) <$> f <*> x
+
+instance Monad Lambda where
+	(>>=) :: forall a b. Lambda a -> (a -> Lambda b) -> Lambda b
+	Lambda x >>= f = Lambda $ x >>= bindTerm where
+		bindTerm :: LambdaTerm a -> BinaryTree (LambdaTerm b)
+		bindTerm (Abstraction y) = pure $ Abstraction $ y >>= f
+		bindTerm (Bound i) = pure $ Bound i
+		bindTerm (Free y) = getTree $ f y
+
+instance Show v => Show (Lambda v) where
+	showsPrec d (Lambda x) = showParen (d>10) $
+		showString "Lambda " . showsPrec 11 x
 
 instance Appliable (Lambda v) where
 	Lambda x $$ Lambda y = Lambda $ x :^: y
@@ -68,6 +95,7 @@ variableNames = flip (:) <$> (flip replicate '\'' <$> [0..]) <*> ['a'..'z']
 
 -- Uses lowercase letters to render free variables, and adds primes (') when
 -- it runs out
+-- Todo remove free variables form list of available variable names
 render :: forall v. (v -> String) -> Lambda v -> String
 render renderVar = renderDepth 0 where
 
@@ -77,7 +105,7 @@ render renderVar = renderDepth 0 where
 	renderTerm :: Int -> LambdaTerm v -> String
 	-- todo collect nested abstractions and render together
 	renderTerm d (Abstraction l) =
-		"λ" <> variableNames !! d <> "." <> renderDepth (d+1) l
+		"(λ" <> variableNames !! d <> "." <> renderDepth (d+1) l <> ")"
 	renderTerm d (Bound i) = variableNames !! (d-i)
 	renderTerm _ (Free v) = renderVar v
 
