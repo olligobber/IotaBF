@@ -1,7 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module BinaryTree
+module Functional.BinaryTree
 	( BinaryTree(..)
 	, fromBinaryTree
 	, invert
@@ -19,7 +19,7 @@ import Data.Function (on)
 import Control.Applicative (liftA2, (<|>))
 import qualified Text.Parsec as P
 
-import Reducible (Appliable(..), Reducible(..))
+import Functional.Reducible (Appliable(..), Reducible(..))
 
 -- Simple binary tree with values stored in leaves
 data BinaryTree a = Leaf a | (:^:) (BinaryTree a) (BinaryTree a)

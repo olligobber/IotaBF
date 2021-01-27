@@ -3,7 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Iota
+module Functional.Iota
 	( Iota(..)
 	, toLambda
 	, iotaParser
@@ -14,10 +14,10 @@ module Iota
 import qualified Text.Parsec as P
 import Control.Applicative ((<|>))
 
-import SKI (SKI(..), HasSKI(..))
-import Lambda (Lambda, abstract, free)
-import Reducible (Reducible(..), Appliable(..))
-import BinaryTree (BinaryTree)
+import Functional.SKI (SKI(..), HasSKI(..))
+import Functional.Lambda.Untyped (Lambda, abstract, free)
+import Functional.Reducible (Reducible(..), Appliable(..))
+import Functional.BinaryTree (BinaryTree)
 
 -- Iota combinator \x.xSK
 data Iota = Iota deriving (Eq, Ord, Show)

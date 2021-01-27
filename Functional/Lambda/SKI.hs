@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module LambdaSKI
+module Functional.Lambda.SKI
 	( toLambda
 	, toSKI
 	) where
@@ -8,10 +8,11 @@ module LambdaSKI
 import Data.Function (on)
 import Data.Maybe (isNothing)
 
-import Lambda (Lambda(..), LambdaTerm(..), free, abstract, substitute)
-import Reducible (($$))
-import SKI (SKI(..), HasSKI(..))
-import BinaryTree (BinaryTree(..), fromBinaryTree)
+import Functional.Lambda.Untyped
+	(Lambda(..), LambdaTerm(..), free, abstract, substitute)
+import Functional.Reducible (($$))
+import Functional.SKI (SKI(..), HasSKI(..))
+import Functional.BinaryTree (BinaryTree(..), fromBinaryTree)
 
 toLambda :: SKI -> Lambda v
 toLambda S = abstract $ abstract $ abstract $

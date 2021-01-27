@@ -3,7 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
 
-module SKI
+module Functional.SKI
 	( SKI(..)
 	, skiParser
 	, HasSKI(..)
@@ -12,7 +12,7 @@ module SKI
 import Control.Applicative ((<|>))
 import qualified Text.Parsec as P
 
-import Reducible (Appliable(..), Reducible(..))
+import Functional.Reducible (Appliable(..), Reducible(..))
 
 -- Combinators in SKI calculus
 data SKI = S | K | I deriving (Eq, Ord, Show, Read)

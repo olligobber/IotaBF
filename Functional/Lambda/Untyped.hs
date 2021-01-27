@@ -7,7 +7,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Lambda
+module Functional.Lambda.Untyped
 	( LambdaTerm(..)
 	, Lambda(..)
 	, LambdaCombinator
@@ -27,9 +27,10 @@ import Control.Monad.Reader (ReaderT, runReaderT, asks, local, mapReaderT)
 import Control.Monad.Trans (lift)
 import Control.Applicative ((<|>))
 
-import BinaryTree (BinaryTree(..), renderL, fromBinaryTree, treeParserL)
-import qualified BinaryTree as BT
-import Reducible (Appliable(..), Reducible(..))
+import Functional.BinaryTree
+	(BinaryTree(..), renderL, fromBinaryTree, treeParserL)
+import qualified Functional.BinaryTree as BT
+import Functional.Reducible (Appliable(..), Reducible(..))
 
 -- A leaf in the application tree of lambda calculus
 data LambdaTerm v = Abstraction (Lambda v) | Bound Int | Free v

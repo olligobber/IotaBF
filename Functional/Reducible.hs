@@ -1,7 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Reducible
+module Functional.Reducible
 	( Appliable(..)
 	, Reducible(..)
 	, Var(..)
