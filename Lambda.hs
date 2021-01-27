@@ -5,6 +5,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Lambda
 	( LambdaTerm(..)
@@ -19,7 +20,6 @@ module Lambda
 	, lambdaParser
 	) where
 
-import Data.Void (Void)
 import qualified Data.Set as S
 import qualified Text.Parsec as P
 import qualified Data.Map as M
@@ -40,7 +40,7 @@ newtype Lambda v = Lambda { getTree :: BinaryTree (LambdaTerm v) }
 	deriving (Eq, Ord)
 
 -- Lambda term with no free variables
-type LambdaCombinator = Lambda Void
+type LambdaCombinator = forall v. Lambda v
 
 instance Functor LambdaTerm where
 	fmap f (Abstraction l) = Abstraction $ f <$> l
