@@ -7,7 +7,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Functional.Lambda.Untyped
+module Functional.Lambda
 	( LambdaTerm(..)
 	, Lambda(..)
 	, LambdaCombinator

@@ -8,7 +8,7 @@ module Functional.Lambda.SKI
 import Data.Function (on)
 import Data.Maybe (isNothing)
 
-import Functional.Lambda.Untyped
+import Functional.Lambda
 	(Lambda(..), LambdaTerm(..), free, abstract, substitute)
 import Functional.Reducible (($$))
 import Functional.SKI (SKI(..), HasSKI(..))

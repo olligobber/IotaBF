@@ -15,7 +15,7 @@ import qualified Text.Parsec as P
 import Control.Applicative ((<|>))
 
 import Functional.SKI (SKI(..), HasSKI(..))
-import Functional.Lambda.Untyped (Lambda, abstract, free)
+import Functional.Lambda (Lambda, abstract, free)
 import Functional.Reducible (Reducible(..), Appliable(..))
 import Functional.BinaryTree (BinaryTree)
 

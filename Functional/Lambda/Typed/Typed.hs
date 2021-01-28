@@ -13,10 +13,10 @@ module Functional.Lambda.Typed
 	, reType
 	) where
 
-import qualified Functional.Lambda.Untyped as U
+import qualified Functional.Lambda as L
 import Functional.Reducible (($$))
 
-newtype TypedLambda t v = TypedLambda { fromTyped :: U.Lambda v }
+newtype TypedLambda t v = TypedLambda { fromTyped :: L.Lambda v }
 	deriving (Eq, Ord)
 
 type TypedCombinator t = forall v. TypedLambda t v
@@ -48,7 +48,7 @@ instance Show v => Show (TypedLambda t v) where
 		showString "TypedLambda " . showsPrec 11 l
 
 free :: v -> TypedLambda t v
-free = TypedLambda . U.free
+free = TypedLambda . L.free
 
 {-
 It is recommended to specify the type of the variables being abstracted as well
@@ -69,10 +69,12 @@ Here, Haskell has inferred that `free Nothing' has the type
 where it should have type `TypedLambda Nat (Maybe v)` since it is the input to
 a function of type (Nat -> Bool). Giving it an explicit type will make Haskell
 pick up on this error:
-`isOne = abstract $ (free Nothing :: TypedInput1 Nat) $$$ predNat $$$ isZero`
+`isOne = abstract $ (free Nothing :: TypedInput1 Nat) $$$ predNat $$$ isZero`.
+Also note that using ScopedTypeVariables for generic functions is recommended
+to allow them to be type checked.
 -}
 abstract :: TypedLambda b (Maybe v) -> TypedLambda (a -> b) v
-abstract (TypedLambda l) = TypedLambda $ U.abstract l
+abstract (TypedLambda l) = TypedLambda $ L.abstract l
 
 infixl 3 $$$
 
