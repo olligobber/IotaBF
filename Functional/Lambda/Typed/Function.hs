@@ -20,6 +20,7 @@ id = abstract (free Nothing :: TypedInput 1 a)
 const :: forall a b. TypedCombinator (a -> b -> a)
 const = abstract $ abstract (free $ Just Nothing :: TypedInput 2 a)
 
+-- AKA (.)
 compose :: forall a b c. TypedCombinator ((b -> c) -> (a -> b) -> a -> c)
 compose = abstract $ abstract $ abstract $
 	(free $ Just $ Just Nothing :: TypedInput 3 (b -> c)) $$$ (
@@ -33,9 +34,10 @@ flip = abstract $ abstract $ abstract $
 	(free Nothing :: TypedInput 1 a) $$$
 	(free $ Just Nothing :: TypedInput 2 b)
 
+-- AKA ($)
 apply :: forall a b. TypedCombinator ((a -> b) -> a -> b)
 apply = abstract $ abstract $
 	(free $ Just Nothing :: TypedInput 2 (a -> b)) $$$
 	(free Nothing :: TypedInput 1 a)
 
--- todo pipe, fix, on,
+-- todo pipe (AKA (&)), fix, on,

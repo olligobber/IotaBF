@@ -26,6 +26,8 @@ type family TypedInput' (n :: Nat) t v where
 	TypedInput' 0 t v = TypedLambda t v
 	TypedInput' n t v = TypedInput' (n - 1) t (Maybe v)
 
+-- Used for inputs of functions with arity >= n, and contains whose
+-- DeBruijn index will be <= n after abstract has been called at least n times
 type TypedInput n t = forall v. TypedInput' n t v
 
 type TypedCombinator t = TypedInput 0 t
@@ -60,19 +62,22 @@ correctly, as haskell may assign these different types if a small error is
 made, such as mixing up two inputs.
 Example:
 ```
-isZero :: TypedCombinator (Nat -> Bool)
+isZero :: TypedCombinator (Natural -> Bool)
 isZero = ...
-predNat :: TypedCombinator (Nat -> Nat)
+predNat :: TypedCombinator (Natural -> Natural)
 predNat = ...
-isOne :: TypedLambda (Nat -> Bool) v
+isOne :: TypedCombinator (Natural -> Bool)
 isOne = abstract $ free Nothing $$$ predNat $$$ isZero
 ```
 Here, Haskell has inferred that `free Nothing' has the type
-`TypedInput1 ((Nat -> Nat) -> (Nat -> Bool) -> Bool)`
-where it should have type `TypedLambda Nat (Maybe v)` since it is the input to
-a function of type (Nat -> Bool). Giving it an explicit type will make Haskell
-pick up on this error:
-`isOne = abstract $ (free Nothing :: TypedInput1 Nat) $$$ predNat $$$ isZero`.
+`TypedInput 1 ((Natural -> Natural) -> (Natural -> Bool) -> Bool)`
+where it should have type `TypedInput 1 Natural` since it is the input to
+a function of type `Natural -> Bool`. Giving it an explicit type will make
+Haskell pick up on this error:
+```
+isOne =
+	abstract $ (free Nothing :: TypedInput 1 Natural) $$$ predNat $$$ isZero
+```
 Also note that using ScopedTypeVariables for generic functions is recommended
 to allow them to be type checked.
 -}
