@@ -26,7 +26,7 @@ type family TypedInput' (n :: Nat) t v where
 	TypedInput' 0 t v = TypedLambda t v
 	TypedInput' n t v = TypedInput' (n - 1) t (Maybe v)
 
--- Used for inputs of functions with arity >= n, and contains whose
+-- Used for inputs of functions with arity >= n, and contains free terms whose
 -- DeBruijn index will be <= n after abstract has been called at least n times
 type TypedInput n t = forall v. TypedInput' n t v
 
