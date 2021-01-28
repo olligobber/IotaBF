@@ -1,17 +1,19 @@
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Functional.Lambda.Typed
 	( TypedLambda(..)
 	, TypedCombinator
-	, TypedInput1
-	, TypedInput2
-	, TypedInput3
-	, TypedInput4
+	, TypedInput
 	, free
 	, abstract
 	, ($$$)
 	, reType
 	) where
+
+import GHC.TypeNats (Nat, type (-))
 
 import qualified Functional.Lambda as L
 import Functional.Reducible (($$))
@@ -19,13 +21,13 @@ import Functional.Reducible (($$))
 newtype TypedLambda t v = TypedLambda { fromTyped :: L.Lambda v }
 	deriving (Eq, Ord)
 
-type TypedCombinator t = forall v. TypedLambda t v
+type family TypedInput' (n :: Nat) t v where
+	TypedInput' 0 t v = TypedLambda t v
+	TypedInput' n t v = TypedInput' (n - 1) t (Maybe v)
 
--- TypedInputn is for inputs of arity n functions.
-type TypedInput1 t = forall v. TypedLambda t (Maybe v)
-type TypedInput2 t = forall v. TypedLambda t (Maybe (Maybe v))
-type TypedInput3 t = forall v. TypedLambda t (Maybe (Maybe (Maybe v)))
-type TypedInput4 t = forall v. TypedLambda t (Maybe (Maybe (Maybe (Maybe v))))
+type TypedInput n t = forall v. TypedInput' n t v
+
+type TypedCombinator t = TypedInput 0 t
 
 instance Functor (TypedLambda t) where
 	fmap f (TypedLambda l) = TypedLambda $ f <$> l
