@@ -1,20 +1,28 @@
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeFamilyDependencies #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Functional.Lambda.Typed
 	( TypedLambda(..)
 	, TypedCombinator
 	, TypedInput
 	, free
+	, input
+	, lift
 	, abstract
+	, toCombinator
 	, ($$$)
 	, reType
 	) where
 
-import GHC.TypeNats (Nat, type (-))
+import GHC.TypeNats (Nat)
+import Nat (Peano, Positive(..), type (<=)(..))
+import Data.Void (absurd)
 
 import qualified Functional.Lambda as L
 import Functional.Reducible (($$))
@@ -22,15 +30,9 @@ import Functional.Reducible (($$))
 newtype TypedLambda t v = TypedLambda { fromTyped :: L.Lambda v }
 	deriving (Eq, Ord)
 
-type family TypedInput' (n :: Nat) t v where
-	TypedInput' 0 t v = TypedLambda t v
-	TypedInput' n t v = TypedInput' (n - 1) t (Maybe v)
+type TypedInput (n :: Nat) t = TypedLambda t (Peano n)
 
--- Used for inputs of functions with arity >= n, and contains free terms whose
--- DeBruijn index will be <= n after abstract has been called at least n times
-type TypedInput n t = forall v. TypedInput' n t v
-
-type TypedCombinator t = TypedInput 0 t
+type TypedCombinator t = forall v. TypedLambda t v
 
 instance Functor (TypedLambda t) where
 	fmap f (TypedLambda l) = TypedLambda $ f <$> l
@@ -55,6 +57,13 @@ instance Show v => Show (TypedLambda t v) where
 free :: v -> TypedLambda t v
 free = TypedLambda . L.free
 
+input :: Positive n => TypedLambda t n
+input = free maxmem
+
+-- Lift a term with inputs of index <=n to a type that can be abstracted m times
+lift :: n <= m => TypedLambda t n -> TypedLambda t m
+lift = fmap generalise
+
 {-
 It is recommended to specify the type of the variables being abstracted as well
 as the result of the abstraction to make sure the type checking has worked
@@ -67,22 +76,24 @@ isZero = ...
 predNat :: TypedCombinator (Natural -> Natural)
 predNat = ...
 isOne :: TypedCombinator (Natural -> Bool)
-isOne = abstract $ free Nothing $$$ predNat $$$ isZero
+isOne = abstract $ input $$$ predNat $$$ isZero
 ```
-Here, Haskell has inferred that `free Nothing' has the type
+Here, Haskell has inferred that `input` has the type
 `TypedInput 1 ((Natural -> Natural) -> (Natural -> Bool) -> Bool)`
 where it should have type `TypedInput 1 Natural` since it is the input to
 a function of type `Natural -> Bool`. Giving it an explicit type will make
 Haskell pick up on this error:
 ```
-isOne =
-	abstract $ (free Nothing :: TypedInput 1 Natural) $$$ predNat $$$ isZero
+isOne = abstract $ (input :: TypedInput 1 Natural) $$$ predNat $$$ isZero
 ```
 Also note that using ScopedTypeVariables for generic functions is recommended
 to allow them to be type checked.
 -}
-abstract :: TypedLambda b (Maybe v) -> TypedLambda (a -> b) v
+abstract :: TypedLambda b (Maybe t) -> TypedLambda (a -> b) t
 abstract (TypedLambda l) = TypedLambda $ L.abstract l
+
+toCombinator :: TypedInput 0 t -> TypedCombinator t
+toCombinator = fmap absurd
 
 infixl 3 $$$
 

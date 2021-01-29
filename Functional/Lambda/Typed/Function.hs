@@ -12,32 +12,33 @@ module Functional.Lambda.Typed.Function
 import Prelude hiding (id, const, flip)
 
 import Functional.Lambda.Typed
-	(TypedCombinator, TypedInput, free, abstract, ($$$))
+	(TypedCombinator, TypedInput, input, lift, abstract, toCombinator, ($$$))
 
 id :: forall a. TypedCombinator (a -> a)
-id = abstract (free Nothing :: TypedInput 1 a)
+id = toCombinator $ abstract (input :: TypedInput 1 a)
 
 const :: forall a b. TypedCombinator (a -> b -> a)
-const = abstract $ abstract (free $ Just Nothing :: TypedInput 2 a)
+const = toCombinator $ abstract $ abstract (input :: TypedInput 2 a)
 
 -- AKA (.)
 compose :: forall a b c. TypedCombinator ((b -> c) -> (a -> b) -> a -> c)
-compose = abstract $ abstract $ abstract $
-	(free $ Just $ Just Nothing :: TypedInput 3 (b -> c)) $$$ (
-		(free $ Just Nothing :: TypedInput 2 (a -> b)) $$$
-		(free Nothing :: TypedInput 1 a)
+compose = toCombinator $ abstract $ abstract $ abstract $
+	(input :: TypedInput 3 (b -> c)) $$$
+	(
+		lift (input :: TypedInput 2 (a -> b)) $$$
+		lift (input :: TypedInput 1 a)
 	)
 
 flip :: forall a b c. TypedCombinator ((a -> b -> c) -> b -> a -> c)
-flip = abstract $ abstract $ abstract $
-	(free $ Just $ Just Nothing :: TypedInput 3 (a -> b -> c)) $$$
-	(free Nothing :: TypedInput 1 a) $$$
-	(free $ Just Nothing :: TypedInput 2 b)
+flip = toCombinator $ abstract $ abstract $ abstract $
+	(input :: TypedInput 3 (a -> b -> c)) $$$
+	lift (input :: TypedInput 1 a) $$$
+	lift (input :: TypedInput 2 b)
 
 -- AKA ($)
 apply :: forall a b. TypedCombinator ((a -> b) -> a -> b)
-apply = abstract $ abstract $
-	(free $ Just Nothing :: TypedInput 2 (a -> b)) $$$
-	(free Nothing :: TypedInput 1 a)
+apply = toCombinator $ abstract $ abstract $
+	(input :: TypedInput 2 (a -> b)) $$$
+	lift (input :: TypedInput 1 a)
 
 -- todo pipe (AKA (&)), fix, on,
