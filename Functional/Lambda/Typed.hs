@@ -1,11 +1,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeFamilyDependencies #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE KindSignatures #-}
 
 module Functional.Lambda.Typed
 	( TypedLambda(..)
@@ -30,6 +26,8 @@ import Functional.Reducible (($$))
 newtype TypedLambda t v = TypedLambda { fromTyped :: L.Lambda v }
 	deriving (Eq, Ord)
 
+-- Used for inputs of functions with arity n, and contains free terms
+-- whose DeBruijn index will be <=n after abstract has been called n times
 type TypedInput (n :: Nat) t = TypedLambda t (Peano n)
 
 type TypedCombinator t = forall v. TypedLambda t v
@@ -57,10 +55,13 @@ instance Show v => Show (TypedLambda t v) where
 free :: v -> TypedLambda t v
 free = TypedLambda . L.free
 
+-- A free term whose DeBruijn index will be n after abstract has been called
+-- n times
 input :: Positive n => TypedLambda t n
 input = free maxmem
 
--- Lift a term with inputs of index <=n to a type that can be abstracted m times
+-- Lift a term with inputs of index <=n to a type that can be abstracted m
+-- times
 lift :: n <= m => TypedLambda t n -> TypedLambda t m
 lift = fmap generalise
 
