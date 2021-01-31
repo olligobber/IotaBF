@@ -7,12 +7,19 @@ module Functional.Lambda.Typed.Function
 	, compose
 	, flip
 	, apply
+	, pipe
+	, fix
+	, on
 	) where
 
 import Prelude hiding (id, const, flip)
 
 import Functional.Lambda.Typed
-	(TypedCombinator, TypedInput, input, lift, abstract, toCombinator, ($$$))
+	( TypedCombinator, TypedInput, TypedLambda(TypedLambda)
+	, input, lift, abstract, toCombinator, ($$$)
+	)
+import qualified Functional.Lambda as L
+import Functional.Reducible (($$))
 
 id :: forall a. TypedCombinator (a -> a)
 id = toCombinator $ abstract (input :: TypedInput 1 a)
@@ -41,4 +48,28 @@ apply = toCombinator $ abstract $ abstract $
 	(input :: TypedInput 2 (a -> b)) $$$
 	lift (input :: TypedInput 1 a)
 
--- todo pipe (AKA (&)), fix, on,
+-- AKA (&)
+pipe :: forall a b. TypedCombinator (a -> (a -> b) -> b)
+pipe = toCombinator $ abstract $ abstract $
+	lift (input :: TypedInput 1 (a -> b)) $$$
+	(input :: TypedInput 2 a)
+
+-- Y combinator
+-- This is impossible to type check so just construct it untyped and assign it
+-- a type after
+fix :: TypedCombinator ((a -> a) -> a)
+fix = TypedLambda $ L.abstract $
+	L.abstract (L.free Nothing $$ L.free Nothing) $$
+	L.abstract (L.free (Just Nothing) $$ (L.free Nothing $$ L.free Nothing))
+
+on :: forall a b c. TypedCombinator ((b -> b -> c) -> (a -> b) -> a -> a -> c)
+on = toCombinator $ abstract $ abstract $ abstract $ abstract $
+	(input :: TypedInput 4 (b -> b -> c)) $$$
+	(
+		lift (input :: TypedInput 3 (a -> b)) $$$
+		lift (input :: TypedInput 2 a)
+	) $$$
+	(
+		lift (input :: TypedInput 3 (a -> b)) $$$
+		lift (input :: TypedInput 1 a)
+	)

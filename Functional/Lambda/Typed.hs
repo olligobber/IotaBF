@@ -14,6 +14,7 @@ module Functional.Lambda.Typed
 	, toCombinator
 	, ($$$)
 	, reType
+	, Representable(..)
 	) where
 
 import GHC.TypeNats (Nat)
@@ -107,3 +108,13 @@ explicit to avoid errors.
 -}
 reType :: TypedLambda a v -> TypedLambda b v
 reType (TypedLambda l) = TypedLambda l
+
+{-
+Class of types that can be converted to their lambda calculus encoding.
+It is expected that instances of Representable and Decode satisfy
+`decodeLambda (fromTyped $ toLambda x :: Lambda Void) = Just x`
+for all x. It is also expected that converting the `fromTyped $ toLambda x` to
+some other functional type and then doing `decodeBT` will also yield `Just x`.
+-}
+class Representable a where
+	toLambda :: a -> TypedCombinator a
