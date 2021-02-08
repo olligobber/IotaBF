@@ -11,7 +11,6 @@ module Functional.Lambda.Typed.Bool
 	, or
 	, not
 	, bool
-	, eq
 	) where
 
 import Prelude hiding (and, or, not)
@@ -88,14 +87,3 @@ bool = toCombinator $ abstract $ abstract $ abstract $
 	lift (toFBool (input :: TypedInput 1 Bool)) $$$
 	lift (input :: TypedInput 2 a) $$$
 	(input :: TypedInput 3 a)
-
--- AKA (==)
-eq :: TypedCombinator (Bool -> Bool -> Bool)
-eq = toCombinator $ abstract $ abstract $
-	toFBool (input :: TypedInput 2 Bool) $$$
-	lift (input :: TypedInput 1 Bool) $$$
-	(
-		toFBool (lift (input :: TypedInput 1 Bool)) $$$
-		(input :: TypedInput 2 Bool) $$$
-		toLambda True
-	)
