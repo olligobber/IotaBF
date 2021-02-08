@@ -4,34 +4,34 @@
 
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module Functional.Lambda.Typed.Tuple (
-	toFUnit,
-	toFTuple2,
-	toFTuple3,
-	toFTuple4,
-	toFTuple5,
-	toFTuple6,
-	toFTuple7,
-	toFTuple8,
-	fromFUnit,
-	fromFTuple2,
-	fromFTuple3,
-	fromFTuple4,
-	fromFTuple5,
-	fromFTuple6,
-	fromFTuple7,
-	fromFTuple8,
-	mkTuple2,
-	mkTuple3,
-	mkTuple4,
-	mkTuple5,
-	mkTuple6,
-	mkTuple7,
-	mkTuple8,
-	get1of2,
-	get2of2,
-	curry,
-	uncurry
+module Functional.Lambda.Typed.Tuple
+	( toFUnit
+	, toFTuple2
+	, toFTuple3
+	, toFTuple4
+	, toFTuple5
+	, toFTuple6
+	, toFTuple7
+	, toFTuple8
+	, fromFUnit
+	, fromFTuple2
+	, fromFTuple3
+	, fromFTuple4
+	, fromFTuple5
+	, fromFTuple6
+	, fromFTuple7
+	, fromFTuple8
+	, mkTuple2
+	, mkTuple3
+	, mkTuple4
+	, mkTuple5
+	, mkTuple6
+	, mkTuple7
+	, mkTuple8
+	, get1of2
+	, get2of2
+	, curry
+	, uncurry
 	) where
 
 import Prelude hiding (curry, uncurry)

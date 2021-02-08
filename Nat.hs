@@ -5,10 +5,10 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Nat (
-	Peano,
-	Positive(..),
-	type (<=)(..)
+module Nat
+	( Peano
+	, Positive(..)
+	, type (<=)(..)
 	) where
 
 import GHC.TypeNats (Nat, type (-))
