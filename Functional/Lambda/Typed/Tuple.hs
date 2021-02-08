@@ -1,0 +1,289 @@
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
+{-# OPTIONS_GHC -Wno-orphans #-}
+
+module Functional.Lambda.Typed.Tuple (
+	toFUnit,
+	toFTuple2,
+	toFTuple3,
+	toFTuple4,
+	toFTuple5,
+	toFTuple6,
+	toFTuple7,
+	toFTuple8,
+	fromFUnit,
+	fromFTuple2,
+	fromFTuple3,
+	fromFTuple4,
+	fromFTuple5,
+	fromFTuple6,
+	fromFTuple7,
+	fromFTuple8,
+	mkTuple2,
+	mkTuple3,
+	mkTuple4,
+	mkTuple5,
+	mkTuple6,
+	mkTuple7,
+	mkTuple8,
+	get1of2,
+	get2of2,
+	curry,
+	uncurry
+	) where
+
+import Prelude hiding (curry, uncurry)
+
+import Functional.Lambda.Typed
+	( TypedCombinator, TypedLambda, TypedInput, Representable(..)
+	, ($$$), input, abstract, toCombinator, reType, lift
+	)
+
+-- Functional equivalent of tuple types
+type FUnit x = x -> x
+type FTuple2 a b x = (a -> b -> x) -> x
+type FTuple3 a b c x = (a -> b -> c -> x) -> x
+type FTuple4 a b c d x = (a -> b -> c -> d -> x) -> x
+type FTuple5 a b c d e x = (a -> b -> c -> d -> e -> x) -> x
+type FTuple6 a b c d e f x = (a -> b -> c -> d -> e -> f -> x) -> x
+type FTuple7 a b c d e f g x =
+	(a -> b -> c -> d -> e -> f -> g -> x) -> x
+type FTuple8 a b c d e f g h x =
+	(a -> b -> c -> d -> e -> f -> g -> h -> x) -> x
+
+toFUnit :: TypedLambda () v -> TypedLambda (FUnit x) v
+toFUnit = reType
+toFTuple2 :: TypedLambda (a,b) v -> TypedLambda (FTuple2 a b x) v
+toFTuple2 = reType
+toFTuple3 :: TypedLambda (a,b,c) v -> TypedLambda (FTuple3 a b c x) v
+toFTuple3 = reType
+toFTuple4 :: TypedLambda (a,b,c,d) v -> TypedLambda (FTuple4 a b c d x) v
+toFTuple4 = reType
+toFTuple5 :: TypedLambda (a,b,c,d,e) v -> TypedLambda (FTuple5 a b c d e x) v
+toFTuple5 = reType
+toFTuple6 :: TypedLambda (a,b,c,d,e,f) v ->
+	TypedLambda (FTuple6 a b c d e f x) v
+toFTuple6 = reType
+toFTuple7 :: TypedLambda (a,b,c,d,e,f,g) v ->
+	TypedLambda (FTuple7 a b c d e f g x) v
+toFTuple7 = reType
+toFTuple8 :: TypedLambda (a,b,c,d,e,f,g,h) v ->
+	TypedLambda (FTuple8 a b c d e f g h x) v
+toFTuple8 = reType
+
+fromFUnit :: TypedLambda (FUnit x) v -> TypedLambda () v
+fromFUnit = reType
+fromFTuple2 :: TypedLambda (FTuple2 a b x) v -> TypedLambda (a,b) v
+fromFTuple2 = reType
+fromFTuple3 :: TypedLambda (FTuple3 a b c x) v -> TypedLambda (a,b,c) v
+fromFTuple3 = reType
+fromFTuple4 :: TypedLambda (FTuple4 a b c d x) v -> TypedLambda (a,b,c,d) v
+fromFTuple4 = reType
+fromFTuple5 :: TypedLambda (FTuple5 a b c d e x) v -> TypedLambda (a,b,c,d,e) v
+fromFTuple5 = reType
+fromFTuple6 :: TypedLambda (FTuple6 a b c d e f x) v ->
+	TypedLambda (a,b,c,d,e,f) v
+fromFTuple6 = reType
+fromFTuple7 :: TypedLambda (FTuple7 a b c d e f g x) v ->
+	TypedLambda (a,b,c,d,e,f,g) v
+fromFTuple7 = reType
+fromFTuple8 :: TypedLambda (FTuple8 a b c d e f g h x) v ->
+	TypedLambda (a,b,c,d,e,f,g,h) v
+fromFTuple8 = reType
+
+instance Representable () where
+	toLambda () = fromFUnit unit where
+		unit :: forall x. TypedCombinator (FUnit x)
+		unit = toCombinator $ abstract (input :: TypedInput 1 x)
+instance (Representable a, Representable b) => Representable (a,b) where
+	toLambda (a,b) = fromFTuple2 tuple where
+		tuple :: forall x. TypedCombinator (FTuple2 a b x)
+		tuple = toCombinator $ abstract $
+			(input :: TypedInput 1 (a -> b -> x)) $$$
+			toLambda a $$$
+			toLambda b
+instance (Representable a, Representable b, Representable c) =>
+	Representable (a,b,c) where
+		toLambda (a,b,c) = fromFTuple3 tuple where
+			tuple :: forall x. TypedCombinator (FTuple3 a b c x)
+			tuple = toCombinator $ abstract $
+				(input :: TypedInput 1 (a -> b -> c -> x)) $$$
+				toLambda a $$$
+				toLambda b $$$
+				toLambda c
+instance (Representable a, Representable b, Representable c, Representable d)
+	=> Representable (a,b,c,d) where
+		toLambda (a,b,c,d) = fromFTuple4 tuple where
+			tuple :: forall x. TypedCombinator (FTuple4 a b c d x)
+			tuple = toCombinator $ abstract $
+				(input :: TypedInput 1 (a -> b -> c -> d -> x)) $$$
+				toLambda a $$$
+				toLambda b $$$
+				toLambda c $$$
+				toLambda d
+instance (Representable a, Representable b, Representable c, Representable d
+	, Representable e) => Representable (a,b,c,d,e) where
+		toLambda (a,b,c,d,e) = fromFTuple5 tuple where
+			tuple :: forall x. TypedCombinator (FTuple5 a b c d e x)
+			tuple = toCombinator $ abstract $
+				(input :: TypedInput 1 (a -> b -> c -> d -> e -> x)) $$$
+				toLambda a $$$
+				toLambda b $$$
+				toLambda c $$$
+				toLambda d $$$
+				toLambda e
+instance (Representable a, Representable b, Representable c, Representable d
+	, Representable e, Representable f) => Representable (a,b,c,d,e,f) where
+		toLambda (a,b,c,d,e,f) = fromFTuple6 tuple where
+			tuple :: forall x. TypedCombinator (FTuple6 a b c d e f x)
+			tuple = toCombinator $ abstract $
+				(input :: TypedInput 1 (a -> b -> c -> d -> e -> f -> x)) $$$
+				toLambda a $$$
+				toLambda b $$$
+				toLambda c $$$
+				toLambda d $$$
+				toLambda e $$$
+				toLambda f
+instance (Representable a, Representable b, Representable c, Representable d
+	, Representable e, Representable f, Representable g) =>
+	Representable (a,b,c,d,e,f,g) where
+		toLambda (a,b,c,d,e,f,g) = fromFTuple7 tuple where
+			tuple :: forall x. TypedCombinator (FTuple7 a b c d e f g x)
+			tuple = toCombinator $ abstract $
+				(input :: TypedInput 1
+					(a -> b -> c -> d -> e -> f -> g -> x)) $$$
+				toLambda a $$$
+				toLambda b $$$
+				toLambda c $$$
+				toLambda d $$$
+				toLambda e $$$
+				toLambda f $$$
+				toLambda g
+instance (Representable a, Representable b, Representable c, Representable d
+	, Representable e, Representable f, Representable g, Representable h) =>
+	Representable (a,b,c,d,e,f,g,h) where
+		toLambda (a,b,c,d,e,f,g,h) = fromFTuple8 tuple where
+			tuple :: forall x. TypedCombinator (FTuple8 a b c d e f g h x)
+			tuple = toCombinator $ abstract $
+				(input :: TypedInput 1
+					(a -> b -> c -> d -> e -> f -> g -> h -> x)) $$$
+				toLambda a $$$
+				toLambda b $$$
+				toLambda c $$$
+				toLambda d $$$
+				toLambda e $$$
+				toLambda f $$$
+				toLambda g $$$
+				toLambda h
+
+-- Constructors
+mkTuple2 :: forall a b. TypedCombinator (a -> b -> (a,b))
+mkTuple2 = toCombinator $ abstract $ abstract $ fromFTuple2 tuple where
+	tuple :: forall x. TypedInput 2 (FTuple2 a b x)
+	tuple = abstract $
+		lift (input :: TypedInput 1 (a -> b -> x)) $$$
+		(input :: TypedInput 3 a) $$$
+		lift (input :: TypedInput 2 b)
+mkTuple3 :: forall a b c. TypedCombinator (a -> b -> c -> (a,b,c))
+mkTuple3 = toCombinator $ abstract $ abstract $ abstract $ fromFTuple3 tuple
+	where
+		tuple :: forall x. TypedInput 3 (FTuple3 a b c x)
+		tuple = abstract $
+			lift (input :: TypedInput 1 (a -> b -> c -> x)) $$$
+			(input :: TypedInput 4 a) $$$
+			lift (input :: TypedInput 3 b) $$$
+			lift (input :: TypedInput 2 c)
+mkTuple4 :: forall a b c d. TypedCombinator (a -> b -> c -> d -> (a,b,c,d))
+mkTuple4 = toCombinator $ abstract $ abstract $ abstract $ abstract $
+	fromFTuple4 tuple where
+		tuple :: forall x. TypedInput 4 (FTuple4 a b c d x)
+		tuple = abstract $
+			lift (input :: TypedInput 1 (a -> b -> c -> d -> x)) $$$
+			(input :: TypedInput 5 a) $$$
+			lift (input :: TypedInput 4 b) $$$
+			lift (input :: TypedInput 3 c) $$$
+			lift (input :: TypedInput 2 d)
+mkTuple5 :: forall a b c d e. TypedCombinator
+	(a -> b -> c -> d -> e -> (a,b,c,d,e))
+mkTuple5 = toCombinator $ abstract $ abstract $ abstract $ abstract $
+	abstract $ fromFTuple5 tuple where
+		tuple :: forall x. TypedInput 5 (FTuple5 a b c d e x)
+		tuple = abstract $
+			lift (input :: TypedInput 1 (a -> b -> c -> d -> e -> x)) $$$
+			(input :: TypedInput 6 a) $$$
+			lift (input :: TypedInput 5 b) $$$
+			lift (input :: TypedInput 4 c) $$$
+			lift (input :: TypedInput 3 d) $$$
+			lift (input :: TypedInput 2 e)
+mkTuple6 :: forall a b c d e f. TypedCombinator
+	(a -> b -> c -> d -> e -> f -> (a,b,c,d,e,f))
+mkTuple6 = toCombinator $ abstract $ abstract $ abstract $ abstract $
+	abstract $ abstract $ fromFTuple6 tuple where
+		tuple :: forall x. TypedInput 6 (FTuple6 a b c d e f x)
+		tuple = abstract $
+			lift (input :: TypedInput 1 (a -> b -> c -> d -> e -> f -> x)) $$$
+			(input :: TypedInput 7 a) $$$
+			lift (input :: TypedInput 6 b) $$$
+			lift (input :: TypedInput 5 c) $$$
+			lift (input :: TypedInput 4 d) $$$
+			lift (input :: TypedInput 3 e) $$$
+			lift (input :: TypedInput 2 f)
+mkTuple7 :: forall a b c d e f g. TypedCombinator
+	(a -> b -> c -> d -> e -> f -> g -> (a,b,c,d,e,f,g))
+mkTuple7 = toCombinator $ abstract $ abstract $ abstract $ abstract $
+	abstract $ abstract $ abstract $ fromFTuple7 tuple where
+		tuple :: forall x. TypedInput 7 (FTuple7 a b c d e f g x)
+		tuple = abstract $
+			lift (input :: TypedInput 1
+				(a -> b -> c -> d -> e -> f -> g -> x)) $$$
+			(input :: TypedInput 8 a) $$$
+			lift (input :: TypedInput 7 b) $$$
+			lift (input :: TypedInput 6 c) $$$
+			lift (input :: TypedInput 5 d) $$$
+			lift (input :: TypedInput 4 e) $$$
+			lift (input :: TypedInput 3 f) $$$
+			lift (input :: TypedInput 2 g)
+mkTuple8 :: forall a b c d e f g h. TypedCombinator
+	(a -> b -> c -> d -> e -> f -> g -> h -> (a,b,c,d,e,f,g,h))
+mkTuple8 = toCombinator $ abstract $ abstract $ abstract $ abstract $
+	abstract $ abstract $ abstract $ abstract $ fromFTuple8 tuple where
+		tuple :: forall x. TypedInput 8 (FTuple8 a b c d e f g h x)
+		tuple = abstract $
+			lift (input :: TypedInput 1
+				(a -> b -> c -> d -> e -> f -> g -> h -> x)) $$$
+			(input :: TypedInput 9 a) $$$
+			lift (input :: TypedInput 8 b) $$$
+			lift (input :: TypedInput 7 c) $$$
+			lift (input :: TypedInput 6 d) $$$
+			lift (input :: TypedInput 5 e) $$$
+			lift (input :: TypedInput 4 f) $$$
+			lift (input :: TypedInput 3 g) $$$
+			lift (input :: TypedInput 2 h)
+
+-- Projections
+get1of2 :: forall a b. TypedCombinator ((a,b) -> a)
+get1of2 = toCombinator $ abstract $
+	toFTuple2 (input :: TypedInput 1 (a,b)) $$$
+	abstract (abstract $ lift (input :: TypedInput 2 a))
+get2of2 :: forall a b. TypedCombinator ((a,b) -> b)
+get2of2 = toCombinator $ abstract $
+	toFTuple2 (input :: TypedInput 1 (a,b)) $$$
+	abstract (abstract $ lift (input :: TypedInput 1 b))
+-- I only wrote this many, if I need more I'll add them, most of the time
+-- I'll just treat the tuples as functions though
+
+-- Currying
+curry :: forall a b c. TypedCombinator (((a,b) -> c) -> a -> b -> c)
+curry = toCombinator $ abstract $ abstract $ abstract $
+	(input :: TypedInput 3 ((a,b) -> c)) $$$
+	(
+		mkTuple2 $$$
+		lift (input :: TypedInput 2 a) $$$
+		lift (input :: TypedInput 1 b)
+	)
+uncurry :: forall a b c. TypedCombinator ((a -> b -> c) -> (a,b) -> c)
+uncurry = toCombinator $ abstract $ abstract $
+	toFTuple2 (lift (input :: TypedInput 1 (a,b))) $$$
+	(input :: TypedInput 2 (a -> b -> c))
