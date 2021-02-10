@@ -7,19 +7,16 @@ module Functional.Lambda.Typed.Tuple.ProjectionsTemplate
 
 import qualified Language.Haskell.TH as TH
 import Control.Monad (replicateM)
-import Data.List((!!))
 
 import Functional.Lambda.Typed
-	( TypedCombinator, TypedLambda, TypedInput, Representable(..)
-	, ($$$), input, abstract, toCombinator, reType, lift
-	)
+	(TypedCombinator, TypedInput, ($$$), input, abstract, toCombinator, lift)
 
 getNofM :: Int -> Int -> TH.Q [TH.Dec]
 getNofM n m = do
 	typevars <- replicateM m (TH.newName "a")
 	let
-		tupletype = pure $ foldl TH.AppT (TH.TupleT m) $ TH.VarT <$> typevars
-		returntype = pure $ TH.VarT $ typevars !! (n-1)
+		tupletype = foldl TH.appT (TH.tupleT m) $ TH.varT <$> typevars
+		returntype = TH.varT $ typevars !! (n-1)
 		functiontype = TH.appT (TH.AppT TH.ArrowT <$> tupletype) returntype
 		functionname = TH.mkName $ "get" <> show n <> "of" <> show m
 		typedeclaration = TH.sigD functionname $
