@@ -11,15 +11,19 @@ module Functional.Lambda.Typed.Bool
 	, or
 	, not
 	, bool
+	, magicIf
+	, magicElseIf
+	, magicElse
 	) where
 
-import Prelude hiding (and, or, not)
+import Prelude hiding (and, or, not, id)
 
 import Functional.Decode (Decode(..))
 import Functional.Lambda.Typed
 	( TypedLambda, TypedCombinator, TypedInput, Representable(..)
 	, reType, toCombinator, input, lift, abstract, ($$$)
 	)
+import Functional.Lambda.Typed.Function (compose, id)
 import Functional.Reducible (($$), Var(Var))
 import Functional.BinaryTree (BinaryTree(Leaf))
 import Functional.Lambda (Lambda(Lambda), LambdaTerm(Free))
@@ -87,3 +91,29 @@ bool = toCombinator $ abstract $ abstract $ abstract $
 	lift (toFBool (input :: TypedInput 1 Bool)) $$$
 	lift (input :: TypedInput 2 a) $$$
 	(input :: TypedInput 3 a)
+
+-- Magic if, see
+-- https://gist.github.com/olligobber/a2b48af361aa20d1751846924bb268c2
+magicIf :: forall a t. TypedCombinator (Bool -> a -> ((a -> a) -> t) -> t)
+magicIf = toCombinator $ abstract $ abstract $ abstract $
+	lift (input :: TypedInput 1 ((a -> a) -> t)) $$$
+	(
+		toFBool (input :: TypedInput 3 Bool) $$$
+		lift (input :: TypedInput 2 a)
+	)
+
+magicElseIf ::
+	forall a t. TypedCombinator ((a -> a) -> Bool -> a -> ((a -> a) -> t) -> t)
+magicElseIf = toCombinator $ abstract $ abstract $ abstract $ abstract $
+	lift (input :: TypedInput 1 ((a -> a) -> t)) $$$
+	(
+		compose $$$
+		(input :: TypedInput 4 (a -> a)) $$$
+		(
+			toFBool (lift (input :: TypedInput 3 Bool)) $$$
+			lift (input :: TypedInput 2 a)
+		)
+	)
+
+magicElse :: forall a. TypedCombinator ((a -> a) -> a -> a)
+magicElse = id

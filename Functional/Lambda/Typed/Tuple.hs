@@ -34,14 +34,14 @@ module Functional.Lambda.Typed.Tuple
 	, uncurry
 	) where
 
-import Prelude hiding (curry, uncurry, and)
+import Prelude hiding (curry, uncurry)
 
 import Functional.Lambda.Typed
 	( TypedCombinator, TypedLambda, TypedInput, Representable(..)
 	, ($$$), input, abstract, toCombinator, reType, lift
 	)
-import Functional.Lambda.Typed.Eq (LambdaEq(..))
-import Functional.Lambda.Typed.Bool (and)
+import Functional.Lambda.Typed.Eq (LambdaEq(..), neq)
+import Functional.Lambda.Typed.Bool (magicIf, magicElseIf, magicElse)
 
 -- Functional equivalent of tuple types
 type FUnit x = x -> x
@@ -103,15 +103,20 @@ instance (LambdaEq a, LambdaEq b) => LambdaEq (a,b) where
 		abstract (abstract $
 			toFTuple2 (lift (input :: TypedInput 3 (a,b))) $$$
 			abstract (abstract $
-				and $$$ (
-					eq $$$
-					lift (input :: TypedInput 4 a) $$$
-					lift (input :: TypedInput 2 a)
-				) $$$ (
-					eq $$$
-					lift (input :: TypedInput 3 b) $$$
-					lift (input :: TypedInput 1 b)
-				)
+				magicIf $$$
+					( neq $$$
+						lift (input :: TypedInput 4 a) $$$
+						lift (input :: TypedInput 2 a)
+					) $$$
+					toLambda False $$$
+				magicElseIf $$$
+					( neq $$$
+						lift (input :: TypedInput 3 b) $$$
+						lift (input :: TypedInput 1 b)
+					) $$$
+					toLambda False $$$
+				magicElse $$$
+					toLambda True
 			)
 		)
 instance (LambdaEq a, LambdaEq b, LambdaEq c) => LambdaEq (a,b,c) where
@@ -120,21 +125,26 @@ instance (LambdaEq a, LambdaEq b, LambdaEq c) => LambdaEq (a,b,c) where
 		abstract (abstract $ abstract $
 			toFTuple3 (lift (input :: TypedInput 4 (a,b,c))) $$$
 			abstract (abstract $ abstract $
-				and $$$ (
-					eq $$$
-					lift (input :: TypedInput 6 a) $$$
-					lift (input :: TypedInput 3 a)
-				) $$$ (
-					and $$$ (
-						eq $$$
+				magicIf $$$
+					( neq $$$
+						lift (input :: TypedInput 6 a) $$$
+						lift (input :: TypedInput 3 a)
+					) $$$
+					toLambda False $$$
+				magicElseIf $$$
+					( neq $$$
 						lift (input :: TypedInput 5 b) $$$
 						lift (input :: TypedInput 2 b)
-					) $$$ (
-						eq $$$
+					) $$$
+					toLambda False $$$
+				magicElseIf $$$
+					( neq $$$
 						lift (input :: TypedInput 4 c) $$$
 						lift (input :: TypedInput 1 c)
-					)
-				)
+					) $$$
+					toLambda False $$$
+				magicElse $$$
+					toLambda True
 			)
 		)
 instance (LambdaEq a, LambdaEq b, LambdaEq c, LambdaEq d) =>
@@ -144,27 +154,32 @@ instance (LambdaEq a, LambdaEq b, LambdaEq c, LambdaEq d) =>
 			abstract (abstract $ abstract $ abstract $
 				toFTuple4 (lift (input :: TypedInput 5 (a,b,c,d))) $$$
 				abstract (abstract $ abstract $ abstract $
-					and $$$ (
-						and $$$ (
-							eq $$$
+					magicIf $$$
+						( neq $$$
 							lift (input :: TypedInput 8 a) $$$
 							lift (input :: TypedInput 4 a)
-						) $$$ (
-							eq $$$
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
 							lift (input :: TypedInput 7 b) $$$
 							lift (input :: TypedInput 3 b)
-						)
-					) $$$ (
-						and $$$ (
-							eq $$$
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
 							lift (input :: TypedInput 6 c) $$$
 							lift (input :: TypedInput 2 c)
-						) $$$ (
-							eq $$$
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
 							lift (input :: TypedInput 5 d) $$$
 							lift (input :: TypedInput 1 d)
-						)
-					)
+						) $$$
+						toLambda False $$$
+					magicElse $$$
+						toLambda True
 				)
 			)
 instance (LambdaEq a, LambdaEq b, LambdaEq c, LambdaEq d, LambdaEq e) =>
@@ -174,33 +189,38 @@ instance (LambdaEq a, LambdaEq b, LambdaEq c, LambdaEq d, LambdaEq e) =>
 			abstract (abstract $ abstract $ abstract $ abstract $
 				toFTuple5 (lift (input :: TypedInput 6 (a,b,c,d,e))) $$$
 				abstract (abstract $ abstract $ abstract $ abstract $
-					and $$$ (
-						and $$$ (
-							and $$$ (
-								eq $$$
-								lift (input :: TypedInput 10 a) $$$
-								lift (input :: TypedInput 5 a)
-							) $$$ (
-								eq $$$
-								lift (input :: TypedInput 9 b) $$$
-								lift (input :: TypedInput 4 b)
-							)
-						) $$$ (
-							eq $$$
+					magicIf $$$
+						( neq $$$
+							lift (input :: TypedInput 10 a) $$$
+							lift (input :: TypedInput 5 a)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
+							lift (input :: TypedInput 9 b) $$$
+							lift (input :: TypedInput 4 b)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
 							lift (input :: TypedInput 8 c) $$$
 							lift (input :: TypedInput 3 c)
-						)
-					) $$$ (
-						and $$$ (
-							eq $$$
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
 							lift (input :: TypedInput 7 d) $$$
 							lift (input :: TypedInput 2 d)
-						) $$$ (
-							eq $$$
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
 							lift (input :: TypedInput 6 e) $$$
 							lift (input :: TypedInput 1 e)
-						)
-					)
+						) $$$
+						toLambda False $$$
+					magicElse $$$
+						toLambda True
 				)
 			)
 instance (LambdaEq a, LambdaEq b, LambdaEq c, LambdaEq d, LambdaEq e
@@ -211,39 +231,44 @@ instance (LambdaEq a, LambdaEq b, LambdaEq c, LambdaEq d, LambdaEq e
 				toFTuple6 (lift (input :: TypedInput 7 (a,b,c,d,e,f))) $$$
 				abstract (abstract $ abstract $ abstract $ abstract $
 				abstract $
-					and $$$ (
-						and $$$ (
-							and $$$ (
-								eq $$$
-								lift (input :: TypedInput 12 a) $$$
-								lift (input :: TypedInput 6 a)
-							) $$$ (
-								eq $$$
-								lift (input :: TypedInput 11 b) $$$
-								lift (input :: TypedInput 5 b)
-							)
-						) $$$ (
-							and $$$ (
-								eq $$$
-								lift (input :: TypedInput 10 c) $$$
-								lift (input :: TypedInput 4 c)
-							) $$$ (
-								eq $$$
-								lift (input :: TypedInput 9 d) $$$
-								lift (input :: TypedInput 3 d)
-							)
-						)
-					) $$$ (
-						and $$$ (
-							eq $$$
+					magicIf $$$
+						( neq $$$
+							lift (input :: TypedInput 12 a) $$$
+							lift (input :: TypedInput 6 a)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
+							lift (input :: TypedInput 11 b) $$$
+							lift (input :: TypedInput 5 b)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
+							lift (input :: TypedInput 10 c) $$$
+							lift (input :: TypedInput 4 c)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
+							lift (input :: TypedInput 9 d) $$$
+							lift (input :: TypedInput 3 d)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
 							lift (input :: TypedInput 8 e) $$$
 							lift (input :: TypedInput 2 e)
-						) $$$ (
-							eq $$$
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
 							lift (input :: TypedInput 7 f) $$$
 							lift (input :: TypedInput 1 f)
-						)
-					)
+						) $$$
+						toLambda False $$$
+					magicElse $$$
+						toLambda True
 				)
 			)
 instance (LambdaEq a, LambdaEq b, LambdaEq c, LambdaEq d, LambdaEq e
@@ -255,45 +280,50 @@ instance (LambdaEq a, LambdaEq b, LambdaEq c, LambdaEq d, LambdaEq e
 				toFTuple7 (lift (input :: TypedInput 8 (a,b,c,d,e,f,g))) $$$
 				abstract (abstract $ abstract $ abstract $ abstract $
 				abstract $ abstract $
-					and $$$ (
-						and $$$ (
-							and $$$ (
-								eq $$$
-								lift (input :: TypedInput 14 a) $$$
-								lift (input :: TypedInput 7 a)
-							) $$$ (
-								eq $$$
-								lift (input :: TypedInput 13 b) $$$
-								lift (input :: TypedInput 6 b)
-							)
-						) $$$ (
-							and $$$ (
-								eq $$$
-								lift (input :: TypedInput 12 c) $$$
-								lift (input :: TypedInput 5 c)
-							) $$$ (
-								eq $$$
-								lift (input :: TypedInput 11 d) $$$
-								lift (input :: TypedInput 4 d)
-							)
-						)
-					) $$$ (
-						and $$$ (
-							and $$$ (
-								eq $$$
-								lift (input :: TypedInput 10 e) $$$
-								lift (input :: TypedInput 3 e)
-							) $$$ (
-								eq $$$
-								lift (input :: TypedInput 9 f) $$$
-								lift (input :: TypedInput 2 f)
-							)
-						) $$$ (
-							eq $$$
+					magicIf $$$
+						( neq $$$
+							lift (input :: TypedInput 14 a) $$$
+							lift (input :: TypedInput 7 a)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
+							lift (input :: TypedInput 13 b) $$$
+							lift (input :: TypedInput 6 b)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
+							lift (input :: TypedInput 12 c) $$$
+							lift (input :: TypedInput 5 c)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
+							lift (input :: TypedInput 11 d) $$$
+							lift (input :: TypedInput 4 d)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
+							lift (input :: TypedInput 10 e) $$$
+							lift (input :: TypedInput 3 e)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
+							lift (input :: TypedInput 9 f) $$$
+							lift (input :: TypedInput 2 f)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
 							lift (input :: TypedInput 8 g) $$$
 							lift (input :: TypedInput 1 g)
-						)
-					)
+						) $$$
+						toLambda False $$$
+					magicElse $$$
+						toLambda True
 				)
 			)
 instance (LambdaEq a, LambdaEq b, LambdaEq c, LambdaEq d, LambdaEq e
@@ -305,51 +335,56 @@ instance (LambdaEq a, LambdaEq b, LambdaEq c, LambdaEq d, LambdaEq e
 				toFTuple8 (lift (input :: TypedInput 9 (a,b,c,d,e,f,g,h))) $$$
 				abstract (abstract $ abstract $ abstract $ abstract $
 				abstract $ abstract $ abstract $
-					and $$$ (
-						and $$$ (
-							and $$$ (
-								eq $$$
-								lift (input :: TypedInput 16 a) $$$
-								lift (input :: TypedInput 8 a)
-							) $$$ (
-								eq $$$
-								lift (input :: TypedInput 15 b) $$$
-								lift (input :: TypedInput 7 b)
-							)
-						) $$$ (
-							and $$$ (
-								eq $$$
-								lift (input :: TypedInput 14 c) $$$
-								lift (input :: TypedInput 6 c)
-							) $$$ (
-								eq $$$
-								lift (input :: TypedInput 13 d) $$$
-								lift (input :: TypedInput 5 d)
-							)
-						)
-					) $$$ (
-						and $$$ (
-							and $$$ (
-								eq $$$
-								lift (input :: TypedInput 12 e) $$$
-								lift (input :: TypedInput 4 e)
-							) $$$ (
-								eq $$$
-								lift (input :: TypedInput 11 f) $$$
-								lift (input :: TypedInput 3 f)
-							)
-						) $$$ (
-							and $$$ (
-								eq $$$
-								lift (input :: TypedInput 10 g) $$$
-								lift (input :: TypedInput 2 g)
-							) $$$ (
-								eq $$$
-								lift (input :: TypedInput 9 h) $$$
-								lift (input :: TypedInput 1 h)
-							)
-						)
-					)
+					magicIf $$$
+						( neq $$$
+							lift (input :: TypedInput 16 a) $$$
+							lift (input :: TypedInput 8 a)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
+							lift (input :: TypedInput 15 b) $$$
+							lift (input :: TypedInput 7 b)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
+							lift (input :: TypedInput 14 c) $$$
+							lift (input :: TypedInput 6 c)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
+							lift (input :: TypedInput 13 d) $$$
+							lift (input :: TypedInput 5 d)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
+							lift (input :: TypedInput 12 e) $$$
+							lift (input :: TypedInput 4 e)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
+							lift (input :: TypedInput 11 f) $$$
+							lift (input :: TypedInput 3 f)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
+							lift (input :: TypedInput 10 g) $$$
+							lift (input :: TypedInput 2 g)
+						) $$$
+						toLambda False $$$
+					magicElseIf $$$
+						( neq $$$
+							lift (input :: TypedInput 9 h) $$$
+							lift (input :: TypedInput 1 h)
+						) $$$
+						toLambda False $$$
+					magicElse $$$
+						toLambda True
 				)
 			)
 
