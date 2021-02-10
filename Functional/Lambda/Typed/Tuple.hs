@@ -28,8 +28,6 @@ module Functional.Lambda.Typed.Tuple
 	, mkTuple6
 	, mkTuple7
 	, mkTuple8
-	, get1of2
-	, get2of2
 	, curry
 	, uncurry
 	) where
@@ -556,18 +554,6 @@ mkTuple8 = toCombinator $ abstract $ abstract $ abstract $ abstract $
 			lift (input :: TypedInput 4 f) $$$
 			lift (input :: TypedInput 3 g) $$$
 			lift (input :: TypedInput 2 h)
-
--- Projections
-get1of2 :: forall a b. TypedCombinator ((a,b) -> a)
-get1of2 = toCombinator $ abstract $
-	toFTuple2 (input :: TypedInput 1 (a,b)) $$$
-	abstract (abstract $ lift (input :: TypedInput 2 a))
-get2of2 :: forall a b. TypedCombinator ((a,b) -> b)
-get2of2 = toCombinator $ abstract $
-	toFTuple2 (input :: TypedInput 1 (a,b)) $$$
-	abstract (abstract $ lift (input :: TypedInput 1 b))
--- I only wrote this many, if I need more I'll add them, most of the time
--- I'll just treat the tuples as functions though
 
 -- Currying
 curry :: forall a b c. TypedCombinator (((a,b) -> c) -> a -> b -> c)
