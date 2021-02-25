@@ -27,7 +27,6 @@ import Functional.Lambda.Typed.Function (compose, id)
 import Functional.Reducible (($$), Var(Var))
 import Functional.BinaryTree (BinaryTree(Leaf))
 import Functional.Lambda (Lambda(Lambda), LambdaTerm(Free))
-import qualified Functional.BinaryTree as BT
 import qualified Functional.Lambda as L
 
 -- Functional equivalent of a Bool
@@ -49,21 +48,14 @@ instance Representable Bool where
 			toCombinator $ abstract $ abstract $ lift (input :: TypedInput 1 b)
 
 instance Decode Bool where
-	decodeBT tree = case
-		BT.leftmostReduce $
-			(Right <$> tree) $$
-			Leaf (Left $ Var True) $$
-			Leaf (Left $ Var False)
-		of
-			Leaf (Left (Var b)) -> Just b
-			_ -> Nothing
 	decodeLambda lambda = case
 		L.leftmostReduce $
 			(Right <$> lambda) $$
-			L.free (Left $ Var True) $$
-			L.free (Left $ Var False)
+			L.free (Left $ Var "True") $$
+			L.free (Left $ Var "False")
 		of
-			Lambda (Leaf (Free (Left (Var b)))) -> Just b
+			Lambda (Leaf (Free (Left (Var "True")))) -> Just True
+			Lambda (Leaf (Free (Left (Var "False")))) -> Just False
 			_ -> Nothing
 
 and :: TypedCombinator (Bool -> Bool -> Bool)
