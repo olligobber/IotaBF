@@ -4,7 +4,7 @@ Tools for making and executing Iota programs, including a BrainFuck interpreter.
 
 ## Building
 
-Install cabal, run `cabal configure && cabal build`.
+Install cabal, run `cabal build`.
 
 ## Running
 
