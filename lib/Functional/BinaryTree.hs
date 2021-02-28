@@ -13,11 +13,13 @@ module Functional.BinaryTree
 	, treeParserR
 	, leftmostStep
 	, leftmostReduce
+	, leftmostStrict
 	) where
 
 import Data.Function (on)
 import Control.Applicative (liftA2, (<|>))
 import qualified Text.Parsec as P
+import Data.Maybe (isNothing)
 
 import Functional.Reducible (Appliable(..), Reducible(..))
 
@@ -183,6 +185,30 @@ leftmostStep t@(l :^: r) = case reducible leftEle of
 	where
 		(leftEle, leftDepth) = leftEleDepth t
 
--- Perform a leftmost reduction
+{-
+	Perform a leftmost reduction, producing a term in
+	weak head normal form (whnf)
+-}
 leftmostReduce :: Reducible (BinaryTree a) a => BinaryTree a -> BinaryTree a
 leftmostReduce t = maybe t leftmostReduce $ leftmostStep t
+
+{-
+	Perform a leftmost reduction, and reduce the inputs to expressions made
+	entirely of irreducible terms
+-}
+leftmostStrict :: forall a. Reducible (BinaryTree a) a =>
+	BinaryTree a -> BinaryTree a
+leftmostStrict = fst . strict . leftmostReduce where
+	{-
+		Reduce inputs to expressions made entirely of irreducible terms,
+		and determine if the result is made entirely of irreducible terms
+	-}
+	strict :: BinaryTree a -> (BinaryTree a, Bool)
+	strict (Leaf x) =
+		( Leaf x
+		, isNothing (reducible x ::
+			Maybe (Integer, [BinaryTree a] -> BinaryTree a))
+		)
+	strict (l :^: r) = case strict l of
+		(nl, True) -> let (nr, x) = strict $ leftmostReduce r in (nl :^: nr, x)
+		(nl, False) -> (nl :^: r, False)
