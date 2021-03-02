@@ -5,6 +5,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE DeriveLift #-}
 
 module Functional.Lambda
 	( LambdaTerm(..)
@@ -25,6 +26,7 @@ import qualified Data.Map as M
 import Control.Monad.Reader (ReaderT, runReaderT, asks, local, mapReaderT)
 import Control.Monad.Trans (lift)
 import Control.Applicative ((<|>))
+import ValidLiterals (Lift)
 
 import Functional.BinaryTree
 	(BinaryTree(..), renderL, fromBinaryTree, treeParserL)
@@ -33,11 +35,11 @@ import Functional.Reducible (Appliable(..), Reducible(..))
 
 -- A leaf in the application tree of lambda calculus
 data LambdaTerm v = Abstraction (Lambda v) | Bound Int | Free v
-	deriving (Eq, Ord, Show)
+	deriving (Eq, Ord, Show, Lift)
 
 -- A term in lambda calculus
 newtype Lambda v = Lambda { getTree :: BinaryTree (LambdaTerm v) }
-	deriving (Eq, Ord)
+	deriving (Eq, Ord, Lift)
 
 -- Lambda term with no free variables
 type LambdaCombinator = forall v. Lambda v

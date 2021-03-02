@@ -1,5 +1,8 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 {-# OPTIONS_GHC -Wno-orphans #-}
 
@@ -16,7 +19,8 @@ module Functional.Lambda.Typed.Bool
 	, magicElse
 	) where
 
-import Prelude hiding (and, or, not, id)
+import Prelude hiding (and, or, not, id, show)
+import ValidLiterals (valid)
 
 import Functional.Decode (Decode(..))
 import Functional.Lambda.Typed
@@ -28,6 +32,7 @@ import Functional.Reducible (($$), Var(Var))
 import Functional.BinaryTree (BinaryTree(Leaf))
 import Functional.Lambda (Lambda(Lambda), LambdaTerm(Free))
 import qualified Functional.Lambda as L
+import Functional.Lambda.Typed.Render (LambdaShow(..), TypedRenderS)
 
 -- Functional equivalent of a Bool
 type FBool a = a -> a -> a
@@ -57,6 +62,12 @@ instance Decode Bool where
 			Lambda (Leaf (Free (Left (Var "True")))) -> Just True
 			Lambda (Leaf (Free (Left (Var "False")))) -> Just False
 			_ -> Nothing
+
+instance LambdaShow Bool where
+	show = abstract $
+		lift (toFBool (input :: TypedInput 1 Bool)) $$$
+		fmap Just ($$(valid "True") :: TypedRenderS) $$$
+		fmap Just ($$(valid "False") :: TypedRenderS)
 
 and :: TypedCombinator (Bool -> Bool -> Bool)
 and = toCombinator $ abstract $ abstract $

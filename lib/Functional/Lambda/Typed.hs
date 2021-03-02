@@ -2,6 +2,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE DeriveLift #-}
 
 module Functional.Lambda.Typed
 	( TypedLambda(..)
@@ -20,12 +21,13 @@ module Functional.Lambda.Typed
 import GHC.TypeNats (Nat)
 import Nat (Peano, Positive(..), type (<=)(..))
 import Data.Void (absurd)
+import ValidLiterals (Lift)
 
 import qualified Functional.Lambda as L
 import Functional.Reducible (($$))
 
 newtype TypedLambda t v = TypedLambda { fromTyped :: L.Lambda v }
-	deriving (Eq, Ord)
+	deriving (Eq, Ord, Lift)
 
 -- Used for inputs of functions with arity n, and contains free terms
 -- whose DeBruijn index will be <=n after abstract has been called n times

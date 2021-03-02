@@ -1,5 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DeriveLift #-}
 
 module Functional.BinaryTree
 	( BinaryTree(..)
@@ -20,12 +21,13 @@ import Data.Function (on)
 import Control.Applicative (liftA2, (<|>))
 import qualified Text.Parsec as P
 import Data.Maybe (isNothing)
+import ValidLiterals (Lift)
 
 import Functional.Reducible (Appliable(..), Reducible(..))
 
 -- Simple binary tree with values stored in leaves
 data BinaryTree a = Leaf a | (:^:) (BinaryTree a) (BinaryTree a)
-	deriving (Eq, Ord)
+	deriving (Eq, Ord, Lift)
 
 infix 5 :^:
 
