@@ -46,25 +46,32 @@ library
                       , Functional.Lambda.Typed.Function
                       , Functional.Lambda.Typed.Tuple
                       , Functional.Lambda.Typed.Word
-    other-modules:    Nat
+    other-modules:      Nat
                       , Functional.Lambda.Typed.Tuple.Template
-    build-depends:    base >= 4.9
-                    , validated-literals >= 0.3
-                    , parsec >= 3.1
-                    , containers >= 0.6
-                    , mtl >= 2.2
-                    , template-haskell >= 2.16
+    build-depends:      base >= 4.9
+                      , validated-literals >= 0.3
+                      , parsec >= 3.1
+                      , containers >= 0.6
+                      , mtl >= 2.2
+                      , template-haskell >= 2.16
 
 executable LambdaToIota
-    import:           shared-properties
-    main-is:          src/LambdaToIota.hs
-    build-depends:    IotaBF
-                    , base >= 4.9
-                    , parsec >= 3.1
+    import:             shared-properties
+    main-is:            src/LambdaToIota.hs
+    build-depends:      IotaBF
+                      , base >= 4.9
+                      , parsec >= 3.1
+
+executable IotaEval
+    import:             shared-properties
+    main-is:            src/IotaEval.hs
+    build-depends:      IotaBF
+                      , base >= 4.9
+                      , parsec >= 3.1
 
 executable StrictIotaEval
-    import:           shared-properties
-    main-is:          src/StrictIotaEval.hs
-    build-depends:    IotaBF
-                    , base >= 4.9
-                    , parsec >= 3.1
+    import:             shared-properties
+    main-is:            src/StrictIotaEval.hs
+    build-depends:      IotaBF
+                      , base >= 4.9
+                      , parsec >= 3.1
