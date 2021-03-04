@@ -16,7 +16,7 @@ import Prelude hiding (id, const, flip)
 
 import Functional.Lambda.Typed
 	( TypedCombinator, TypedInput, TypedLambda(TypedLambda)
-	, input, lift, abstract, toCombinator, ($$$)
+	, input, liftInput, abstract, toCombinator, ($$$)
 	)
 import qualified Functional.Lambda as L
 import Functional.Reducible (($$))
@@ -32,26 +32,26 @@ compose :: forall a b c. TypedCombinator ((b -> c) -> (a -> b) -> a -> c)
 compose = toCombinator $ abstract $ abstract $ abstract $
 	(input :: TypedInput 3 (b -> c)) $$$
 	(
-		lift (input :: TypedInput 2 (a -> b)) $$$
-		lift (input :: TypedInput 1 a)
+		liftInput (input :: TypedInput 2 (a -> b)) $$$
+		liftInput (input :: TypedInput 1 a)
 	)
 
 flip :: forall a b c. TypedCombinator ((a -> b -> c) -> b -> a -> c)
 flip = toCombinator $ abstract $ abstract $ abstract $
 	(input :: TypedInput 3 (a -> b -> c)) $$$
-	lift (input :: TypedInput 1 a) $$$
-	lift (input :: TypedInput 2 b)
+	liftInput (input :: TypedInput 1 a) $$$
+	liftInput (input :: TypedInput 2 b)
 
 -- AKA ($)
 apply :: forall a b. TypedCombinator ((a -> b) -> a -> b)
 apply = toCombinator $ abstract $ abstract $
 	(input :: TypedInput 2 (a -> b)) $$$
-	lift (input :: TypedInput 1 a)
+	liftInput (input :: TypedInput 1 a)
 
 -- AKA (&)
 pipe :: forall a b. TypedCombinator (a -> (a -> b) -> b)
 pipe = toCombinator $ abstract $ abstract $
-	lift (input :: TypedInput 1 (a -> b)) $$$
+	liftInput (input :: TypedInput 1 (a -> b)) $$$
 	(input :: TypedInput 2 a)
 
 -- Y combinator
@@ -66,10 +66,10 @@ on :: forall a b c. TypedCombinator ((b -> b -> c) -> (a -> b) -> a -> a -> c)
 on = toCombinator $ abstract $ abstract $ abstract $ abstract $
 	(input :: TypedInput 4 (b -> b -> c)) $$$
 	(
-		lift (input :: TypedInput 3 (a -> b)) $$$
-		lift (input :: TypedInput 2 a)
+		liftInput (input :: TypedInput 3 (a -> b)) $$$
+		liftInput (input :: TypedInput 2 a)
 	) $$$
 	(
-		lift (input :: TypedInput 3 (a -> b)) $$$
-		lift (input :: TypedInput 1 a)
+		liftInput (input :: TypedInput 3 (a -> b)) $$$
+		liftInput (input :: TypedInput 1 a)
 	)

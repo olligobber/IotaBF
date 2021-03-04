@@ -11,7 +11,7 @@ import Prelude hiding (curry, uncurry)
 
 import Functional.Lambda.Typed
 	( TypedCombinator, TypedLambda, TypedInput, Representable(..)
-	, input, abstract, toCombinator, reType, lift, ($$$)
+	, input, abstract, toCombinator, reType, liftInput, ($$$)
 	)
 import Functional.Lambda.Typed.Eq (LambdaEq(..))
 import Functional.Lambda.Typed.Tuple.Template (generateTuples)
@@ -54,10 +54,10 @@ curry = toCombinator $ abstract $ abstract $ abstract $
 	(input :: TypedInput 3 ((a,b) -> c)) $$$
 	(
 		mkTuple2 $$$
-		lift (input :: TypedInput 2 a) $$$
-		lift (input :: TypedInput 1 b)
+		liftInput (input :: TypedInput 2 a) $$$
+		liftInput (input :: TypedInput 1 b)
 	)
 uncurry :: forall a b c. TypedCombinator ((a -> b -> c) -> (a, b) -> c)
 uncurry = toCombinator $ abstract $ abstract $
-	toFTuple2 (lift (input :: TypedInput 1 (a,b))) $$$
+	toFTuple2 (liftInput (input :: TypedInput 1 (a,b))) $$$
 	(input :: TypedInput 2 (a -> b -> c))

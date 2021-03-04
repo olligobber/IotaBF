@@ -47,7 +47,8 @@ library
                       , Functional.Lambda.Typed.Render
                       , Functional.Lambda.Typed.Tuple
                       , Functional.Lambda.Typed.Word
-    other-modules:      Nat
+    other-modules:      Types.Nat
+                      , Types.MaybeN
                       , Functional.Lambda.Typed.Tuple.Template
     build-depends:      base >= 4.9
                       , validated-literals >= 0.3

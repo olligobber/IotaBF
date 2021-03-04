@@ -5,7 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Nat
+module Types.Nat
 	( Peano
 	, Positive(..)
 	, type (<=)(..)

@@ -10,7 +10,7 @@ import Prelude hiding (not)
 
 import Functional.Lambda.Typed
 	( TypedCombinator, TypedInput
-	, ($$$), toLambda, input, abstract, lift, toCombinator
+	, ($$$), toLambda, input, abstract, liftInput, toCombinator
 	)
 import Functional.Lambda.Typed.Bool (toFBool, not)
 
@@ -23,15 +23,15 @@ neq = toCombinator $ abstract $ abstract $
 	(
 		(eq :: TypedCombinator (t -> t -> Bool)) $$$
 		(input :: TypedInput 2 t) $$$
-		lift (input :: TypedInput 1 t)
+		liftInput (input :: TypedInput 1 t)
 	)
 
 instance LambdaEq Bool where
 	eq = toCombinator $ abstract $ abstract $
 		toFBool (input :: TypedInput 2 Bool) $$$
-		lift (input :: TypedInput 1 Bool) $$$
+		liftInput (input :: TypedInput 1 Bool) $$$
 		(
-			toFBool (lift (input :: TypedInput 1 Bool)) $$$
+			toFBool (liftInput (input :: TypedInput 1 Bool)) $$$
 			(input :: TypedInput 2 Bool) $$$
 			toLambda True
 		)

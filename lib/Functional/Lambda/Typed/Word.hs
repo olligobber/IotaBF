@@ -17,7 +17,7 @@ import Control.Monad (guard)
 import Functional.Decode (Decode(..))
 import Functional.Lambda.Typed
 	( TypedLambda, TypedCombinator, TypedInput, Representable(..)
-	, reType, input, lift, ($$$), abstract, toCombinator
+	, reType, input, liftInput, ($$$), abstract, toCombinator
 	)
 import Functional.Lambda.Typed.Eq (LambdaEq(..))
 import Functional.Lambda.Typed.Tuple (mkTuple2, mkTuple4, toFTuple8)
@@ -60,15 +60,15 @@ getNibbles = toCombinator $ abstract $
 	abstract ( abstract $ abstract $ abstract $ abstract $ abstract $ abstract
 		$ abstract $ mkTuple2 $$$
 		(mkTuple4 $$$
-			lift (input :: TypedInput 8 Bool) $$$
-			lift (input :: TypedInput 7 Bool) $$$
-			lift (input :: TypedInput 6 Bool) $$$
-			lift (input :: TypedInput 5 Bool)
+			liftInput (input :: TypedInput 8 Bool) $$$
+			liftInput (input :: TypedInput 7 Bool) $$$
+			liftInput (input :: TypedInput 6 Bool) $$$
+			liftInput (input :: TypedInput 5 Bool)
 		) $$$
 		(mkTuple4 $$$
-			lift (input :: TypedInput 4 Bool) $$$
-			lift (input :: TypedInput 3 Bool) $$$
-			lift (input :: TypedInput 2 Bool) $$$
-			lift (input :: TypedInput 1 Bool)
+			liftInput (input :: TypedInput 4 Bool) $$$
+			liftInput (input :: TypedInput 3 Bool) $$$
+			liftInput (input :: TypedInput 2 Bool) $$$
+			liftInput (input :: TypedInput 1 Bool)
 		)
 	)

@@ -12,7 +12,7 @@ import Data.List (intersperse)
 
 import Functional.Lambda.Typed
 	( TypedCombinator, TypedLambda, TypedInput
-	, ($$$), input, abstract, toCombinator, reType, lift, fromTyped
+	, ($$$), input, abstract, toCombinator, reType, liftInput, fromTyped
 	)
 import Functional.Lambda.Typed.Eq (neq)
 import Functional.Lambda.Typed.Bool (magicIf, magicElseIf, magicElse)
@@ -82,9 +82,9 @@ instanceLambdaEq n = do
 		constraints = TH.appT lambdaEq <$> tupleTypes
 		result = TH.appT lambdaEq tupleType
 		neqcheck m = [| neq $$$
-			lift (input :: TypedInput $(typeLit $ 2*n-m)
+			liftInput (input :: TypedInput $(typeLit $ 2*n-m)
 				$(tupleTypes !! m)) $$$
-			lift (input :: TypedInput $(typeLit $ n-m) $(tupleTypes !! m))
+			liftInput (input :: TypedInput $(typeLit $ n-m) $(tupleTypes !! m))
 			|]
 		ifs = foldl (\a b -> [| $a $$$ $b |]) [| magicIf |] $
 			join (intersperse [ [| toLambda False |], [| magicElseIf |] ] $
@@ -93,7 +93,7 @@ instanceLambdaEq n = do
 		eqdef = [| toCombinator $ abstract $ abstract $
 			$(toFTupleN n) (input :: TypedInput 2 $tupleType) $$$
 			$(abstractN n [|
-				$(toFTupleN n) (lift (input :: TypedInput $(typeLit $ n+1)
+				$(toFTupleN n) (liftInput (input :: TypedInput $(typeLit $ n+1)
 					$tupleType)) $$$
 				$(abstractN n ifs)
 				|] )
@@ -139,11 +139,11 @@ declMkTupleN n = do
 		functionType =
 			foldr (\a b -> [t| $a -> $b |]) (tupleN tupleTypes) tupleTypes
 		name = TH.mkName $ "mkTuple" <> show n
-		inputs = (\k -> [| lift
+		inputs = (\k -> [| liftInput
 			(input :: TypedInput $(typeLit $ n+1-k) $(tupleTypes !! k)) |])
 			<$> [0..n-1]
 		extraction = foldl (\a b -> [| $a $$$ $b |])
-			[| lift (input :: TypedInput 1 $extractorType) |]
+			[| liftInput (input :: TypedInput 1 $extractorType) |]
 			inputs
 		function = [| toCombinator $(abstractN n
 			[| $(fromFTupleN n) $ abstract $extraction |]
@@ -164,8 +164,8 @@ declGetNOfM n m = do
 		returnType = TH.varT $ typeVars !! (n-1)
 		functionType = [t| $tupleType -> $returnType |]
 		functionName = TH.mkName $ "get" <> show n <> "of" <> show m
-		extractorReturn =
-			[| lift (input :: TypedInput $(typeLit $ m-n+1) $returnType) |]
+		extractorReturn = [| liftInput
+			(input :: TypedInput $(typeLit $ m-n+1) $returnType) |]
 		extractor = abstractN m extractorReturn
 		function = [| toCombinator $ abstract $
 			$(toFTupleN m) (input :: TypedInput 1 $tupleType) $$$ $extractor |]

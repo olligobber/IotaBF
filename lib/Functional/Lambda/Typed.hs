@@ -10,7 +10,8 @@ module Functional.Lambda.Typed
 	, TypedInput
 	, free
 	, input
-	, lift
+	, liftInput
+	, liftFree
 	, abstract
 	, toCombinator
 	, ($$$)
@@ -19,7 +20,8 @@ module Functional.Lambda.Typed
 	) where
 
 import GHC.TypeNats (Nat)
-import Nat (Peano, Positive(..), type (<=)(..))
+import Types.Nat (Peano, Positive(..), type (<=)(..))
+import Types.MaybeN (MaybeN(justn))
 import Data.Void (absurd)
 import ValidLiterals (Lift)
 
@@ -64,9 +66,15 @@ input :: Positive n => TypedLambda t n
 input = free maxmem
 
 -- Lift a term with inputs of index <=n to a type that can be abstracted m
--- times
-lift :: n <= m => TypedLambda t n -> TypedLambda t m
-lift = fmap generalise
+-- times, and may have free variables, using an fmapped absurd so the value
+-- doesn't change
+liftInput :: n <= m => TypedLambda t n -> TypedLambda t m
+liftInput = fmap generalise
+
+-- Lift a term with free variables to a type that can be abstracted many times,
+-- using composed Justs so the value does change
+liftFree :: MaybeN a b => TypedLambda t a -> TypedLambda t b
+liftFree = fmap justn
 
 {-
 It is recommended to specify the type of the variables being abstracted as well

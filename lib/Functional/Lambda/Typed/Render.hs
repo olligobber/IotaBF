@@ -19,7 +19,7 @@ module Functional.Lambda.Typed.Render
 
 import Functional.Lambda.Typed
 	( TypedLambda(..), TypedInput, TypedCombinator
-	, reType, abstract, input, ($$$), lift
+	, reType, abstract, input, ($$$), liftInput
 	)
 import Functional.Lambda.Typed.Function (id)
 import qualified Functional.Lambda as L
@@ -62,7 +62,7 @@ instance LambdaShow t => LambdaRender t where
 	render :: TypedLambda (t -> Rendering) IFree
 	render = abstract $
 		fmap Just show $$$
-		lift (input :: TypedInput 1 t) $$$
+		liftInput (input :: TypedInput 1 t) $$$
 		(reType id :: TypedCombinator Rendering)
 
 type TypedRenderS = TypedLambda RenderS IFree
