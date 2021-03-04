@@ -1,6 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DeriveLift #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Functional.BinaryTree
 	( BinaryTree(..)
@@ -195,7 +196,7 @@ leftmostReduce :: Reducible (BinaryTree a) a => BinaryTree a -> BinaryTree a
 leftmostReduce t = maybe t leftmostReduce $ leftmostStep t
 
 {-
-	Perform a leftmost reduction, and reduce the inputs to expressions made
+	Perform a leftmost reduction, and reduce the inputs of expressions made
 	entirely of irreducible terms
 -}
 leftmostStrict :: forall a. Reducible (BinaryTree a) a =>
@@ -208,8 +209,7 @@ leftmostStrict = fst . strict . leftmostReduce where
 	strict :: BinaryTree a -> (BinaryTree a, Bool)
 	strict (Leaf x) =
 		( Leaf x
-		, isNothing (reducible x ::
-			Maybe (Integer, [BinaryTree a] -> BinaryTree a))
+		, isNothing $ reducible @(BinaryTree a) x
 		)
 	strict (l :^: r) = case strict l of
 		(nl, True) -> let (nr, x) = strict $ leftmostReduce r in (nl :^: nr, x)

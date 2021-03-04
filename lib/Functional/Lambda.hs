@@ -17,6 +17,7 @@ module Functional.Lambda
 	, substitute
 	, leftmostStep
 	, leftmostReduce
+	, leftmostStrict
 	, lambdaParser
 	) where
 
@@ -28,8 +29,7 @@ import Control.Monad.Trans (lift)
 import Control.Applicative ((<|>))
 import ValidLiterals (Lift)
 
-import Functional.BinaryTree
-	(BinaryTree(..), renderL, fromBinaryTree, treeParserL)
+import Functional.BinaryTree (BinaryTree(..), renderL, treeParserL)
 import qualified Functional.BinaryTree as BT
 import Functional.Reducible (Appliable(..), Reducible(..))
 
@@ -163,13 +163,20 @@ instance Reducible (BinaryTree (LambdaTerm v)) v =>
 -- Perform a step of leftmost reduction if possible
 leftmostStep ::
 	Reducible (BinaryTree (LambdaTerm v)) v => Lambda v -> Maybe (Lambda v)
-leftmostStep (Lambda l) =
-	fromBinaryTree . fmap (Lambda . Leaf) <$> BT.leftmostStep l
+leftmostStep (Lambda l) = Lambda <$> BT.leftmostStep l
 
 -- Perform a leftmost reduction
 leftmostReduce ::
 	Reducible (BinaryTree (LambdaTerm v)) v => Lambda v -> Lambda v
-leftmostReduce l = maybe l leftmostReduce $ leftmostStep l
+leftmostReduce (Lambda l) = Lambda $ BT.leftmostReduce l
+
+{-
+	Perform a leftmost reduction, and reduce the inputs of expressions made
+	entirely of irreducible terms
+-}
+leftmostStrict :: Reducible (BinaryTree (LambdaTerm v)) v =>
+	Lambda v -> Lambda v
+leftmostStrict (Lambda l) = Lambda $ BT.leftmostStrict l
 
 data BoundState = BoundState
 	-- How many abstractions deep was a variable bound

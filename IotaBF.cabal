@@ -70,9 +70,9 @@ executable IotaEval
                       , base >= 4.9
                       , parsec >= 3.1
 
-executable StrictIotaEval
+executable LambdaEval
     import:             shared-properties
-    main-is:            src/StrictIotaEval.hs
+    main-is:            src/LambdaEval.hs
     build-depends:      IotaBF
                       , base >= 4.9
                       , parsec >= 3.1
