@@ -44,9 +44,7 @@ flip = toCombinator $ abstract $ abstract $ abstract $
 
 -- AKA ($)
 apply :: forall a b. TypedCombinator ((a -> b) -> a -> b)
-apply = toCombinator $ abstract $ abstract $
-	(input :: TypedInput 2 (a -> b)) $$$
-	liftInput (input :: TypedInput 1 a)
+apply = id
 
 -- AKA (&)
 pipe :: forall a b. TypedCombinator (a -> (a -> b) -> b)
