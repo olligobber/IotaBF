@@ -11,6 +11,7 @@ module Functional.Lambda.Typed.Render
 	, RenderS
 	, fromString
 	, fromStringS
+	, concat
 	, LambdaShow(..)
 	, LambdaRender(..)
 	, TypedRenderS
@@ -21,12 +22,12 @@ import Functional.Lambda.Typed
 	( TypedLambda(..), TypedInput, TypedCombinator
 	, reType, abstract, input, ($$$), liftInput
 	)
-import Functional.Lambda.Typed.Function (id)
+import Functional.Lambda.Typed.Function (id, flip, compose)
 import qualified Functional.Lambda as L
 import Functional.Reducible (($$))
 import Functional.Iota.Free (IFree)
 
-import Prelude hiding (id, show)
+import Prelude hiding (id, show, concat, flip)
 import ValidLiterals (Validate(..), Lift)
 
 -- Represents a string of free variables, or the identity
@@ -43,6 +44,9 @@ fromString s = TypedLambda . foldl1 ($$) <$>
 fromStringS :: Validate Char c => String -> Maybe (TypedLambda RenderS c)
 fromStringS s = TypedLambda . L.abstract . foldl ($$) (L.free Nothing) <$>
 	traverse (fmap (L.free . Just) . fromLiteral) s
+
+concat :: TypedCombinator (RenderS -> RenderS -> RenderS)
+concat = flip $$$ compose
 
 instance (Lift c, Validate Char c) =>
 	Validate String (TypedLambda Rendering c) where
