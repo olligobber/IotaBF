@@ -47,6 +47,7 @@ library
                       , Functional.Lambda.Typed.Render
                       , Functional.Lambda.Typed.Tuple
                       , Functional.Lambda.Typed.Word
+                      , THPrintType
     other-modules:      Types.Nat
                       , Types.MaybeN
                       , Functional.Lambda.Typed.Tuple.Template
@@ -84,7 +85,5 @@ executable PrintLambdas
     build-depends:      IotaBF
                       , base >= 4.9
                       , template-haskell >= 2.16
-                      , containers >= 0.6
-                      , mtl >= 2.2
     hs-source-dirs:     src
     other-modules:      PrintLambdasTemplate
