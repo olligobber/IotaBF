@@ -44,6 +44,8 @@ library
                       , Functional.Lambda.Typed.Bool
                       , Functional.Lambda.Typed.Eq
                       , Functional.Lambda.Typed.Function
+                      , Functional.Lambda.Typed.Maybe
+                      , Functional.Lambda.Typed.Natural
                       , Functional.Lambda.Typed.Render
                       , Functional.Lambda.Typed.Tuple
                       , Functional.Lambda.Typed.Word

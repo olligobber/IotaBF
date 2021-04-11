@@ -64,6 +64,12 @@ instance Decode Word8 where
 			guard bool
 			pure $ bit index
 
+instance LambdaShow Word8 where
+	show = abstract $
+		concat $$$
+		liftFree ($$(valid "0x") :: TypedRenderS) $$$
+		(liftFree showByte $$$ liftInput (input :: TypedInput 1 Word8))
+
 showNibble :: TypedLambda (Nibble -> RenderS) IFree
 showNibble = abstract $
 	toFTuple4 (liftInput (input :: TypedInput 1 Nibble)) $$$
@@ -157,9 +163,3 @@ showByte = abstract $
 		(liftFree showNibble $$$ liftInput (input :: TypedInput 2 Nibble)) $$$
 		(liftFree showNibble $$$ liftInput (input :: TypedInput 1 Nibble))
 	)
-
-instance LambdaShow Word8 where
-	show = abstract $
-		concat $$$
-		liftFree ($$(valid "0x") :: TypedRenderS) $$$
-		(liftFree showByte $$$ liftInput (input :: TypedInput 1 Word8))
