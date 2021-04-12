@@ -33,8 +33,11 @@ import ValidLiterals (Validate(..), Lift)
 -- Represents a string of free variables, or the identity
 data Rendering
 
--- Allows for concatenation via composition
+-- Allows for concatenation via function composition
 type RenderS = Rendering -> Rendering
+
+type TypedRenderS = TypedLambda RenderS IFree
+type TypedRendering = TypedLambda Rendering IFree
 
 fromString :: Validate Char c => String -> Maybe (TypedLambda Rendering c)
 fromString "" = Just $ reType id
@@ -48,6 +51,7 @@ fromStringS s = TypedLambda . L.abstract . foldl ($$) (L.free Nothing) <$>
 concat :: TypedCombinator (RenderS -> RenderS -> RenderS)
 concat = flip $$$ compose
 
+-- Allow compile time construction of renderings using template haskell
 instance (Lift c, Validate Char c) =>
 	Validate String (TypedLambda Rendering c) where
 		fromLiteral = fromString
@@ -68,7 +72,3 @@ instance LambdaShow t => LambdaRender t where
 		liftFree show $$$
 		liftInput (input :: TypedInput 1 t) $$$
 		(reType id :: TypedCombinator Rendering)
-
-type TypedRenderS = TypedLambda RenderS IFree
-
-type TypedRendering = TypedLambda Rendering IFree

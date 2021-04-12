@@ -89,3 +89,9 @@ executable PrintLambdas
                       , template-haskell >= 2.16
     hs-source-dirs:     src
     other-modules:      PrintLambdasTemplate
+
+executable Addition
+    import:             shared-properties
+    main-is:            src/Addition.hs
+    build-depends:      IotaBF
+                      , base >= 4.9

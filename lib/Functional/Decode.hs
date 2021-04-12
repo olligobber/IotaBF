@@ -15,6 +15,7 @@ class Decode t where
 		Reducible (BinaryTree (LambdaTerm (Either (Var String) x))) x =>
 		Lambda x -> Maybe t
 
+-- Decode an arbitrary binary tree by turning it into lambda free variables
 decodeBT ::
 	(Decode t, Reducible (BinaryTree (LambdaTerm (Either (Var String) x))) x) =>
 	BinaryTree x -> Maybe t

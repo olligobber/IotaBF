@@ -20,6 +20,7 @@ import qualified Functional.Lambda as L
 import Functional.Reducible (Var(..), ($$))
 import Functional.BinaryTree (BinaryTree(Leaf))
 
+-- Functional equivalent of unit type: the identity
 type FUnit x = x -> x
 
 toFUnit :: TypedLambda () v -> TypedLambda (FUnit x) v
@@ -57,6 +58,7 @@ curry = toCombinator $ abstract $ abstract $ abstract $
 		liftInput (input :: TypedInput 2 a) $$$
 		liftInput (input :: TypedInput 1 b)
 	)
+
 uncurry :: forall a b c. TypedCombinator ((a -> b -> c) -> (a, b) -> c)
 uncurry = toCombinator $ abstract $ abstract $
 	toFTuple2 (liftInput (input :: TypedInput 1 (a,b))) $$$

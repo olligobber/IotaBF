@@ -17,6 +17,7 @@ import Functional.Lambda.Typed.Word (showNibble, getNibbles, showByte)
 
 import PrintLambdasTemplate
 
+-- List of functions currently written
 functions :: [FunctionEntry]
 functions =
 	[
@@ -39,8 +40,8 @@ functions =
 	, $(makeEntry "magicElseIf" "Used to continue if-elseif-else blocks")
 	, $(makeEntry "magicElse" "Used to end if-elseif-else blocks")
 	-- Tuple
-		-- mkTupleN todo
-		-- getNofM todo
+		-- mkTupleN TODO
+		-- getNofM TODO
 	, $(makeEntry "curry"
 		"Turn a function on a pair into a function with two inputs")
 	, $(makeEntry "uncurry"
@@ -49,14 +50,19 @@ functions =
 	, $(makeEntry "showNibble" "Render a nibble as a hex digit")
 	, $(makeEntry "getNibbles" "Get both nibbles from a byte")
 	, $(makeEntry "showByte" "Render a byte as two hex digits")
+	-- Maybe
+		-- TODO
+	-- Natural
+		-- TODO
 	-- Render
-		-- todo
+		-- TODO
 	-- Eq
-		-- todo
+		-- TODO
 	-- Representable
-		-- todo
+		-- TODO
 	]
 
+-- Output all functions listed above
 main :: IO ()
 main = mapM_
 	(\e -> do
@@ -67,7 +73,9 @@ main = mapM_
 		putStrLn $ "Definition: " <> render renderIFree (lambda e)
 	)
 	functions
+	>> putStrLn ""
 
--- Print functions from a list
--- Print types from a list
--- List all available
+-- Desired behaviours:
+	-- Print functions from a list (lambda or iota)
+	-- Print types from a list
+	-- List all available

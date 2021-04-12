@@ -18,24 +18,30 @@ import Functional.Lambda.Typed.Eq (neq)
 import Functional.Lambda.Typed.Bool (magicIf, magicElseIf, magicElse)
 import Functional.Reducible (($$))
 
+-- Turn an int into a type literal
 typeLit :: Int -> TH.Q TH.Type
 typeLit = TH.litT . TH.numTyLit . toInteger
 
+-- Combine n types into an n-tuple type
 tupleN :: [TH.Q TH.Type] -> TH.Q TH.Type
 tupleN tupleTypes = foldl TH.appT (TH.tupleT $ length tupleTypes) tupleTypes
 
+-- Apply the typed lambda abstract method n times to something
 abstractN :: Int -> TH.Q TH.Exp -> TH.Q TH.Exp
 abstractN n e = foldl (\a _-> [| abstract $a |]) e $ replicate n ()
 
+-- Get the constructor for an n-tuple value
 tupleConstructor :: Int -> TH.Q TH.Exp
 tupleConstructor n = TH.conE $ TH.tupleDataName n
 
+-- Turn n types and a return type into the functional equivalent of an n-tuple
 fTupleN :: [TH.Q TH.Type] -> TH.Q TH.Type -> TH.Q TH.Type
 fTupleN tupleTypes returnType = foldl
 	TH.appT
 	(TH.conT $ TH.mkName $ "FTuple" <> show (length tupleTypes))
 	(tupleTypes <> [returnType])
 
+-- Declare the functional equivalent of the n-tuple type
 declFTupleN :: Int -> TH.Q TH.Dec
 declFTupleN n = do
 	tupleVars <- replicateM n (TH.newName "a")
@@ -48,12 +54,15 @@ declFTupleN n = do
 		name = TH.mkName $ "FTuple" <> show n
 	TH.tySynD name (TH.plainTV <$> (tupleVars <> [returnVar])) finalType
 
+-- Function to convert to functional tuple type
 toFTupleN :: Int -> TH.Q TH.Exp
 toFTupleN n = TH.varE $ TH.mkName $ "toFTuple" <> show n
 
+-- Function to convert from functional tuple type
 fromFTupleN :: Int -> TH.Q TH.Exp
 fromFTupleN n = TH.varE $ TH.mkName $ "fromFTuple" <> show n
 
+-- Declare conversion functions for functional tuple types
 declConvertFTupleN :: Int -> TH.Q [TH.Dec]
 declConvertFTupleN n = do
 	tupleVars <- replicateM n (TH.newName "a")
@@ -72,6 +81,7 @@ declConvertFTupleN n = do
 	fromfundec <- TH.funD fromName [TH.clause [] (TH.normalB [| reType |]) []]
 	pure [totypedec, tofundec, fromtypedec, fromfundec]
 
+-- Eq instance for lambda tuples
 instanceLambdaEq :: Int -> TH.Q TH.Dec
 instanceLambdaEq n = do
 	tupleVars <- replicateM n (TH.newName "a")
@@ -101,6 +111,7 @@ instanceLambdaEq n = do
 	TH.instanceD (sequenceA constraints) result
 		[TH.funD (TH.mkName "eq") [TH.clause [] (TH.normalB eqdef) []]]
 
+-- Representable instance for lambda tuples
 instanceRepresentable :: Int -> TH.Q TH.Dec
 instanceRepresentable n = do
 	tupleVars <- replicateM n $ TH.newName "a"
@@ -125,9 +136,11 @@ instanceRepresentable n = do
 			[]
 		]]
 
+-- Constructor for n-tuples
 -- mkTupleN :: Int -> TH.Q TH.Exp
 -- mkTupleN n = TH.varE $ TH.mkName $ "mkTuple" <> show n
 
+-- Declares the constructor for n-tuples
 declMkTupleN :: Int -> TH.Q [TH.Dec]
 declMkTupleN n = do
 	tupleVars <- replicateM n $ TH.newName "a"
@@ -153,9 +166,11 @@ declMkTupleN n = do
 	funDecl <- TH.funD name [TH.clause [] (TH.normalB function) []]
 	pure [typeDecl, funDecl]
 
+-- Extractor for the mth value of an n-tuple
 getNofM :: Int -> Int -> TH.Q TH.Exp
 getNofM n m = TH.varE $ TH.mkName $ "get" <> show n <> "of" <> show m
 
+-- Declares the extractor for n-tuples
 declGetNOfM :: Int -> Int -> TH.Q [TH.Dec]
 declGetNOfM n m = do
 	typeVars <- replicateM m $ TH.newName "a"
@@ -176,9 +191,11 @@ declGetNOfM n m = do
 		TH.funD functionName [TH.clause [] (TH.normalB function) []]
 	pure [typeDeclaration, funDeclaration]
 
+-- Declares all n extractors for an n-tuple
 declGetAllOfN :: Int -> TH.Q [TH.Dec]
 declGetAllOfN n = join <$> traverse (`declGetNOfM` n) [1..n]
 
+-- Decode instance for n-tuples
 instanceDecode :: Int -> TH.Q TH.Dec
 instanceDecode n = do
 	typeVars <- replicateM n $ TH.newName "a"
@@ -199,6 +216,7 @@ instanceDecode n = do
 			[]
 		]]
 
+-- Generates all declarations needed for an n-tuple
 generateTuple :: Int -> TH.Q [TH.Dec]
 generateTuple n = join <$> sequenceA
 	[ pure <$> declFTupleN n
@@ -210,5 +228,6 @@ generateTuple n = join <$> sequenceA
 	, pure <$> instanceDecode n
 	]
 
+-- Generate all declarations for tuples of size 2 to n
 generateTuples :: Int -> TH.Q [TH.Dec]
 generateTuples n = join <$> traverse generateTuple [2..n]

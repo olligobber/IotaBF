@@ -41,6 +41,7 @@ import Functional.Lambda.Typed.Render
 	(LambdaShow(..), RenderS, TypedRenderS, concat)
 import Functional.Iota.Free (IFree)
 
+-- Functional equivalent of natural numbers, composes its first input n times
 type FNatural a = (a -> a) -> a -> a
 
 toFNatural :: TypedLambda Natural v -> TypedLambda (FNatural a) v
@@ -50,6 +51,7 @@ fromFNatural :: TypedLambda (FNatural a) v -> TypedLambda Natural v
 fromFNatural = reType
 
 instance LambdaEq Natural where
+	-- Subtract and see if you get zero
 	eq = toCombinator $ abstract $ abstract $
 		maybe $$$
 		toLambda False $$$
@@ -79,6 +81,8 @@ instance Decode Natural where
 		Nothing -> Nothing
 
 instance LambdaShow Natural where
+	-- If the number is less than 10, render its digit, otherwise use divmod
+	-- to remove the last digit and recurse on the leading digits
 	show = fix $$$ showF where
 		showF :: TypedLambda ((Natural -> RenderS) -> Natural -> RenderS) IFree
 		showF = abstract $ abstract $
@@ -265,4 +269,4 @@ mod = toCombinator $ abstract $ abstract $
 		liftInput (input :: TypedInput 1 Natural)
 	)
 
--- todo lt, gt, lte, gte
+-- TODO lt, gt, lte, gte

@@ -37,7 +37,7 @@ import Functional.Reducible (Appliable(..), Reducible(..))
 data LambdaTerm v = Abstraction (Lambda v) | Bound Int | Free v
 	deriving (Eq, Ord, Show, Lift)
 
--- A term in lambda calculus
+-- A term in lambda calculus, parameterised by the type of free variables
 newtype Lambda v = Lambda { getTree :: BinaryTree (LambdaTerm v) }
 	deriving (Eq, Ord, Lift)
 
@@ -140,7 +140,8 @@ render renderVar top = renderDepth 0 top where
 	freeVariables = foldMap (S.singleton . renderVar) top
 
 -- Applies one lambda to another, assuming the first would be wrapped in an
--- abstraction, and neither contains variables bound beyond the current scope
+-- abstraction, and neither contains variables bound beyond the current scope.
+-- Suitable for WHNF reductions only.
 substitute :: forall v. Lambda v -> Lambda v -> Lambda v
 substitute (Lambda t) (Lambda x) = Lambda $ t >>= replaceBound 1
 	where
@@ -184,19 +185,36 @@ data BoundState = BoundState
 	-- How many abstractions deep are we now
 	Int
 
+-- Initial state, nothing bound
+emptyBoundState :: BoundState
+emptyBoundState = BoundState M.empty 0
+
+-- Bind a new variable
+updateBoundState :: String -> BoundState -> BoundState
+updateBoundState newvar (BoundState m d) = BoundState
+	(M.insert newvar d m)
+	(d+1)
+
+-- Get the DeBruijn index of a variable if it is bound
+getIndex :: String -> BoundState -> Maybe Int
+getIndex var (BoundState m d) = (d-) <$> M.lookup var m
+
 -- Take in a free variable parser and make a lambda calculus parser
 lambdaParser :: forall s u m a.
 	P.Stream s m Char => P.ParsecT s u m a -> P.ParsecT s u m (Lambda a)
 lambdaParser freeParser = runReaderT lambdaParserR emptyBoundState where
 
+	-- Reader based lambda parser
 	lambdaParserR :: ReaderT BoundState (P.ParsecT s u m) (Lambda a)
 	lambdaParserR = Lambda <$> mapReaderT treeParserL lambdaTermParser
 
+	-- Parse an abstraction
 	fullAbstractionParser ::
 		ReaderT BoundState (P.ParsecT s u m) (LambdaTerm a)
 	fullAbstractionParser =
 		lift (P.char '\\' <|> P.char 'λ') *> partAbstractionParser
 
+	-- Parse the abstraction minus the lambda and some variables
 	partAbstractionParser ::
 		ReaderT BoundState (P.ParsecT s u m) (LambdaTerm a)
 	partAbstractionParser = lift variableParser >>= \var ->
@@ -204,6 +222,8 @@ lambdaParser freeParser = runReaderT lambdaParserR emptyBoundState where
 			lift (P.char '.') *> lambdaParserR <|>
 			Lambda . Leaf <$> partAbstractionParser
 
+	-- Parse a bound variable using info from the state
+	-- Uses try to backtrack if the variable wasn't bound
 	boundVariableParser :: ReaderT BoundState (P.ParsecT s u m) Int
 	boundVariableParser = mapReaderT P.try $ do
 		var <- lift variableParser
@@ -216,19 +236,6 @@ lambdaParser freeParser = runReaderT lambdaParserR emptyBoundState where
 		Bound <$> boundVariableParser <|>
 		Free <$> lift freeParser
 
+	-- Parse a variable without using info from the state
 	variableParser :: P.ParsecT s u m String
 	variableParser = (:) <$> P.oneOf ['a'..'z'] <*> P.many (P.char '\'')
-
-	-- Initial state, nothing bound
-	emptyBoundState :: BoundState
-	emptyBoundState = BoundState M.empty 0
-
-	-- Bind a new variable
-	updateBoundState :: String -> BoundState -> BoundState
-	updateBoundState newvar (BoundState m d) = BoundState
-		(M.insert newvar d m)
-		(d+1)
-
-	-- Get the DeBruijn index of a variable if it is bound
-	getIndex :: String -> BoundState -> Maybe Int
-	getIndex var (BoundState m d) = (d-) <$> M.lookup var m

@@ -28,6 +28,8 @@ import ValidLiterals (Lift)
 import qualified Functional.Lambda as L
 import Functional.Reducible (($$))
 
+-- Typed lambda calculus, parametrised over a haskell type t and free variable
+-- type v
 newtype TypedLambda t v = TypedLambda { fromTyped :: L.Lambda v }
 	deriving (Eq, Ord, Lift)
 
@@ -36,6 +38,8 @@ newtype TypedLambda t v = TypedLambda { fromTyped :: L.Lambda v }
 type TypedInput (n :: Nat) t = TypedLambda t (Peano n)
 
 type TypedCombinator t = forall v. TypedLambda t v
+
+-- Instances are parameterised over the free variable type
 
 instance Functor (TypedLambda t) where
 	fmap f (TypedLambda l) = TypedLambda $ f <$> l
@@ -107,6 +111,7 @@ abstract (TypedLambda l) = TypedLambda $ L.abstract l
 toCombinator :: TypedInput 0 t -> TypedCombinator t
 toCombinator = fmap absurd
 
+-- Typed function application
 infixl 3 $$$
 
 ($$$) :: TypedLambda (a -> b) v -> TypedLambda a v -> TypedLambda b v

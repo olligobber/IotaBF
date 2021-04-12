@@ -33,6 +33,8 @@ import Functional.Reducible (($$), Var(Var))
 import Functional.Lambda.Typed.Render (LambdaShow(..), TypedRenderS, concat)
 import qualified Functional.Lambda.Typed.Function as LF
 
+-- Functional equivalent of maybe type,
+-- Nothing returns its first input, Just applies its second input to its value
 type FMaybe a b = b -> (a -> b) -> b
 
 toFMaybe :: TypedLambda (Maybe a) v -> TypedLambda (FMaybe a b) v
@@ -72,6 +74,7 @@ instance Decode a => Decode (Maybe a) where
 		of
 			Lambda (Leaf (Free (Left (Var "Nothing")))) -> Just Nothing
 			Lambda (Leaf (Free (Left (Var "Just"))) :^: x) ->
+				-- Remove any "Nothing" or "Just" that ended up in x
 				case traverse (either (const Nothing) Just) (Lambda x) of
 					Nothing -> Nothing
 					Just lx -> Just <$> decodeLambda lx
@@ -102,6 +105,7 @@ just = reType justF where
 		liftInput (input :: TypedInput 1 (a -> c)) $$$
 		(input :: TypedInput 3 a)
 
+-- fmap but for maybe, until I added functor class
 mmap :: forall a b. TypedCombinator ((a -> b) -> Maybe a -> Maybe b)
 mmap = toCombinator $ abstract $ abstract $
 	toFMaybe (liftInput (input :: TypedInput 1 (Maybe a))) $$$

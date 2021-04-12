@@ -14,6 +14,8 @@ parseLambda = parse
 printLambda :: Lambda (Var String) -> String
 printLambda = render getVar
 
+-- Evaluate lambda calculus to WHNF, acting strict on free variables if
+-- the flag is enabled
 main :: IO ()
 main = do
 	args <- getArgs

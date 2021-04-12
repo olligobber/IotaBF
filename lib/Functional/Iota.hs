@@ -22,7 +22,7 @@ import Functional.BinaryTree (BinaryTree)
 -- Iota combinator \x.xSK
 data Iota = Iota deriving (Eq, Ord, Show)
 
--- Representation in lambda calculus
+-- Representation in lambda calculus using s and k as free variables
 toLambda :: HasSKI v => Iota -> Lambda v
 toLambda Iota = abstract $ free Nothing $$ s $$ k
 

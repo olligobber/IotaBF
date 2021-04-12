@@ -20,16 +20,20 @@ data FunctionEntry = FunctionEntry
 	, lambda :: Lambda IFree
 	}
 
+-- Test if a type constructor is for typed lambda calculus
 tl :: TH.Type -> Bool
 tl (TH.ConT t) = TH.nameBase t == "TypedLambda" &&
 	TH.nameModule t == Just "Functional.Lambda.Typed"
 tl _ = False
 
+-- Test if a type constructor is for a typed lambda combinator
 tc :: TH.Type -> Bool
 tc (TH.ConT t) = TH.nameBase t == "TypedCombinator" &&
 	TH.nameModule t == Just "Functional.Lambda.Typed"
 tc _ = False
 
+-- Given a function's name and description, make an entry using its type and
+-- definition
 makeEntry :: String -> String -> TH.Q TH.Exp
 makeEntry function desc = do
 	Just fname <- TH.lookupValueName function

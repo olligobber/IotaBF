@@ -26,6 +26,8 @@ reduceIota reduction =
 printIota :: BinaryTree (Either IFree Iota) -> String
 printIota = renderL $ either renderIFree renderIota
 
+-- Evaluate input as iota into WHNF, acting strictly on free variables if
+-- the flag is enabled
 main :: IO ()
 main = do
 	args <- getArgs

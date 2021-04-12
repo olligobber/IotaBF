@@ -54,6 +54,7 @@ instance Monad Var where
 instance Reducible t (Var x) where
 	reducible _ = Nothing
 
+-- Union of types can reduce
 instance (Reducible t x, Reducible t y) => Reducible t (Either x y) where
 	reducible (Left x) = reducible x
 	reducible (Right x) = reducible x

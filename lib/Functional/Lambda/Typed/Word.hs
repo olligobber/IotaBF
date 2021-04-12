@@ -32,6 +32,7 @@ import Functional.Lambda.Typed.Render
 import Functional.Iota.Free (IFree)
 import Functional.Lambda.Typed.Bool (toFBool)
 
+-- Tuple representation of Nibble and Word8, most significant bit first
 type Nibble = (Bool,Bool,Bool,Bool)
 type TByte = (Bool,Bool,Bool,Bool,Bool,Bool,Bool,Bool)
 
@@ -64,12 +65,14 @@ instance Decode Word8 where
 			guard bool
 			pure $ bit index
 
+-- Render a byte as 0x followed by two hex digits
 instance LambdaShow Word8 where
 	show = abstract $
 		concat $$$
 		liftFree ($$(valid "0x") :: TypedRenderS) $$$
 		(liftFree showByte $$$ liftInput (input :: TypedInput 1 Word8))
 
+-- Render a nibble as a hex digit
 showNibble :: TypedLambda (Nibble -> RenderS) IFree
 showNibble = abstract $
 	toFTuple4 (liftInput (input :: TypedInput 1 Nibble)) $$$
@@ -135,6 +138,7 @@ showNibble = abstract $
 		)
 	)
 
+-- Extract two nibbles from a byte, most significant nibble first
 getNibbles :: TypedCombinator (Word8 -> (Nibble, Nibble))
 getNibbles = toCombinator $ abstract $
 	toFTuple8 (toTByte (input :: TypedInput 1 Word8)) $$$
@@ -163,3 +167,5 @@ showByte = abstract $
 		(liftFree showNibble $$$ liftInput (input :: TypedInput 2 Nibble)) $$$
 		(liftFree showNibble $$$ liftInput (input :: TypedInput 1 Nibble))
 	)
+
+-- TODO actual useful functions like succ, pred, etc

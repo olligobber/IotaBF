@@ -19,6 +19,7 @@ parseLambda = parse (lambdaParser iFreeParser) "Standard Input"
 showIota :: BinaryTree (Either IFree Iota) -> String
 showIota = renderL (either renderIFree renderIota)
 
+-- Convert lambda calculus to iota
 main :: IO ()
 main = interact $
 	(<>"\n") .

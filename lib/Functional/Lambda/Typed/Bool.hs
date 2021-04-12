@@ -34,7 +34,8 @@ import Functional.Lambda (Lambda(Lambda), LambdaTerm(Free))
 import qualified Functional.Lambda as L
 import Functional.Lambda.Typed.Render (LambdaShow(..), TypedRenderS)
 
--- Functional equivalent of a Bool
+-- Functional equivalent of a Bool,
+-- true returns its first input, false returns its second
 type FBool a = a -> a -> a
 
 toFBool :: TypedLambda Bool v -> TypedLambda (FBool a) v
@@ -53,6 +54,7 @@ instance Representable Bool where
 			liftInput (input :: TypedInput 1 b)
 
 instance Decode Bool where
+	-- Feed in two free variables and see which one it returns
 	decodeLambda lambda = case
 		L.leftmostReduce $
 			(Right <$> lambda) $$
@@ -89,6 +91,7 @@ not = toCombinator $ abstract $ fromFBool notF where
 		liftInput (input :: TypedInput 1 a) $$$
 		liftInput (input :: TypedInput 2 a)
 
+-- Based on haskell's bool function
 bool :: forall a. TypedCombinator (a -> a -> Bool -> a)
 bool = toCombinator $ abstract $ abstract $ abstract $
 	liftInput (toFBool (input :: TypedInput 1 Bool)) $$$
