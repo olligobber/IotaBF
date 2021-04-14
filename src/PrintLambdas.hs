@@ -2,7 +2,10 @@
 
 -- import Data.Map (Map)
 -- import qualified Data.Map as M
-import Prelude hiding (id, const, flip, and, or, not, show, curry, uncurry)
+import Prelude hiding
+	( id, const, flip, and, or, not, show, curry, uncurry, maybe, succ, pred
+	, subtract, div, mod
+	)
 
 import Functional.Iota.Free (renderIFree)
 import Functional.Lambda (render)
@@ -12,6 +15,10 @@ import Functional.Lambda.Typed.Bool
 	(and, or, not, bool, magicIf, magicElseIf, magicElse)
 import Functional.Lambda.Typed.Tuple
 import Functional.Lambda.Typed.Word (showNibble, getNibbles, showByte)
+import Functional.Lambda.Typed.Maybe
+	(nothing, just, mmap, maybe, isJust, isNothing, fromMaybe)
+import Functional.Lambda.Typed.Natural
+	(succ, isZero, pred, add, mult, pow, subtract, divmod, div, mod)
 -- import Functional.Lambda.Typed.Render (show)
 -- import Functional.Lambda.Typed.Eq (eq, neq)
 
@@ -51,9 +58,28 @@ functions =
 	, $(makeEntry "getNibbles" "Get both nibbles from a byte")
 	, $(makeEntry "showByte" "Render a byte as two hex digits")
 	-- Maybe
-		-- TODO
+	, $(makeEntry "nothing" "A maybe with no value")
+	, $(makeEntry "just" "Put a value into a maybe")
+	, $(makeEntry "mmap" "Apply a function to any value in a maybe")
+	, $(makeEntry "maybe" $ "Replaces nothing with the first value and " <>
+		"applies the second value to just")
+	, $(makeEntry "isJust" "Check if a maybe has a value")
+	, $(makeEntry "isNothing" "Check if a maybe has no value")
+	, $(makeEntry "fromMaybe" $ "Extract the value from a maybe, returns " <>
+		"the first input if no value exists")
 	-- Natural
-		-- TODO
+	, $(makeEntry "succ" "Increment a natural number")
+	, $(makeEntry "isZero" "Check if a natural number is zero")
+	, $(makeEntry "pred" "Decrement a natural number, fails on zero")
+	, $(makeEntry "add" "Add two natural numbers")
+	, $(makeEntry "mult" "Multiply two natural numbers")
+	, $(makeEntry "pow" "Raise the first number to the power of the second")
+	, $(makeEntry "subtract"
+		"Subtract two numbers, fails if the result is negative")
+	, $(makeEntry "divmod" $ "Divide the first number by the second and get " <>
+		"the quotient and remainder")
+	, $(makeEntry "div" "Divide the first number by the second")
+	, $(makeEntry "mod" "Get the first number modulo the second")
 	-- Render
 		-- TODO
 	-- Eq
