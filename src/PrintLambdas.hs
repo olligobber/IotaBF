@@ -16,7 +16,7 @@ import Functional.Lambda.Typed.Bool
 import Functional.Lambda.Typed.Tuple
 import Functional.Lambda.Typed.Word (showNibble, getNibbles, showByte)
 import Functional.Lambda.Typed.Maybe
-	(nothing, just, mmap, maybe, isJust, isNothing, fromMaybe)
+	(nothing, just, maybe, isJust, isNothing, fromMaybe)
 import Functional.Lambda.Typed.Natural
 	(succ, isZero, pred, add, mult, pow, subtract, divmod, div, mod)
 -- import Functional.Lambda.Typed.Render (show)
@@ -60,7 +60,6 @@ functions =
 	-- Maybe
 	, $(makeEntry "nothing" "A maybe with no value")
 	, $(makeEntry "just" "Put a value into a maybe")
-	, $(makeEntry "mmap" "Apply a function to any value in a maybe")
 	, $(makeEntry "maybe" $ "Replaces nothing with the first value and " <>
 		"applies the second value to just")
 	, $(makeEntry "isJust" "Check if a maybe has a value")
@@ -85,6 +84,10 @@ functions =
 	-- Eq
 		-- TODO
 	-- Representable
+		-- TODO
+	-- Functor
+		-- TODO
+	-- List
 		-- TODO
 	]
 
