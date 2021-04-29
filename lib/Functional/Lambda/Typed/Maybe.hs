@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE InstanceSigs #-}
 
 {-# OPTIONS_GHC -Wno-orphans #-}
 
@@ -10,14 +11,13 @@ module Functional.Lambda.Typed.Maybe
 	, fromFMaybe
 	, nothing
 	, just
-	, mmap
 	, maybe
 	, isJust
 	, isNothing
 	, fromMaybe
 	) where
 
-import Prelude hiding (show, concat, maybe)
+import Prelude hiding (show, concat, maybe, map)
 import ValidLiterals (valid)
 
 import Functional.Lambda.Typed
@@ -32,6 +32,7 @@ import Functional.BinaryTree (BinaryTree(..))
 import Functional.Reducible (($$), Var(Var))
 import Functional.Lambda.Typed.Render (LambdaShow(..), TypedRenderS, concat)
 import qualified Functional.Lambda.Typed.Function as LF
+import Functional.Lambda.Typed.Functor (LambdaFunctor(..))
 
 -- Functional equivalent of maybe type,
 -- Nothing returns its first input, Just applies its second input to its value
@@ -93,6 +94,19 @@ instance LambdaShow a => LambdaShow (Maybe a) where
 			liftFree ($$(valid "]") :: TypedRenderS)
 		)
 
+instance LambdaFunctor Maybe where
+	map :: forall a b. TypedCombinator ((a -> b) -> Maybe a -> Maybe b)
+	map = toCombinator $ abstract $ abstract $
+		toFMaybe (liftInput (input :: TypedInput 1 (Maybe a))) $$$
+		nothing $$$
+		abstract (
+			just $$$
+			(
+				(input :: TypedInput 3 (a -> b)) $$$
+				liftInput (input :: TypedInput 1 a)
+			)
+		)
+
 nothing :: forall a. TypedCombinator (Maybe a)
 nothing = fromFMaybe nothingF where
 	nothingF :: forall b c. TypedCombinator (b -> c -> b)
@@ -104,19 +118,6 @@ just = reType justF where
 	justF = toCombinator $ abstract $ abstract $ abstract $
 		liftInput (input :: TypedInput 1 (a -> c)) $$$
 		(input :: TypedInput 3 a)
-
--- fmap but for maybe, until I added functor class
-mmap :: forall a b. TypedCombinator ((a -> b) -> Maybe a -> Maybe b)
-mmap = toCombinator $ abstract $ abstract $
-	toFMaybe (liftInput (input :: TypedInput 1 (Maybe a))) $$$
-	nothing $$$
-	abstract (
-		just $$$
-		(
-			(input :: TypedInput 3 (a -> b)) $$$
-			liftInput (input :: TypedInput 1 a)
-		)
-	)
 
 maybe :: forall a b. TypedCombinator (b -> (a -> b) -> Maybe a -> b)
 maybe = toCombinator $ abstract $ abstract $ abstract $
