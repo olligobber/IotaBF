@@ -45,6 +45,7 @@ library
                       , Functional.Lambda.Typed.Eq
                       , Functional.Lambda.Typed.Function
                       , Functional.Lambda.Typed.Functor
+                      , Functional.Lambda.Typed.List
                       , Functional.Lambda.Typed.Maybe
                       , Functional.Lambda.Typed.Natural
                       , Functional.Lambda.Typed.Render
