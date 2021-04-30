@@ -4,7 +4,8 @@
 -- import qualified Data.Map as M
 import Prelude hiding
 	( id, const, flip, and, or, not, show, curry, uncurry, maybe, succ, pred
-	, subtract, div, mod
+	, subtract, div, mod, concat, head, last, tail, init, null, foldr, reverse
+	, foldl, repeat, cycle, filter, zipWith, zip
 	)
 
 import Functional.Iota.Free (renderIFree)
@@ -19,6 +20,10 @@ import Functional.Lambda.Typed.Maybe
 	(nothing, just, maybe, isJust, isNothing, fromMaybe)
 import Functional.Lambda.Typed.Natural
 	(succ, isZero, pred, add, mult, pow, subtract, divmod, div, mod)
+import Functional.Lambda.Typed.List
+	( cons, empty, append, concat, head, last, uncons, tail, init, singleton
+	, null, foldr, foldl, reverse, repeat, cycle, filter, zipWith, zip
+	)
 -- import Functional.Lambda.Typed.Render (show)
 -- import Functional.Lambda.Typed.Eq (eq, neq)
 
@@ -88,7 +93,29 @@ functions =
 	-- Functor
 		-- TODO
 	-- List
-		-- TODO
+	, $(makeEntry "cons" "Add an element to the start of a list")
+	, $(makeEntry "empty" "Empty list")
+	, $(makeEntry "append" "Add an element to the end of a list")
+	, $(makeEntry "concat" "Concatenate two lists")
+	, $(makeEntry "head" "Get the first element of a non empty list")
+	, $(makeEntry "last" "Get the last element of a non empty list")
+	, $(makeEntry "uncons"
+		"Get the first element and the rest of a non empty list")
+	, $(makeEntry "tail" "Remove the first element of a non empty list")
+	, $(makeEntry "init" "Remove the last element of a non empty list")
+	, $(makeEntry "singleton" "Make a list with one element")
+	, $(makeEntry "null" "Test if a list is empty")
+	, $(makeEntry "foldr" "Apply a function to the elements from end to start")
+	, $(makeEntry "foldl" "Apply a function to the elements from start to end")
+	, $(makeEntry "reverse" "Reverse a list")
+	, $(makeEntry "repeat" "Make an infinite list containing one element")
+	, $(makeEntry "cycle"
+		"Make an infinite list that cycles over the elements of another list")
+	-- TODO elem
+	, $(makeEntry "filter" "Keep elements of a list that satisfy a predicate")
+	, $(makeEntry "zipWith"
+		"Combine two lists element by element using the given function")
+	, $(makeEntry "zip" "Combine two lists element by element into pairs")
 	]
 
 -- Output all functions listed above
