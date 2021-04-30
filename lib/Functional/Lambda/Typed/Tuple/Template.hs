@@ -216,6 +216,8 @@ instanceDecode n = do
 			[]
 		]]
 
+-- TODO show and functor instances
+
 -- Generates all declarations needed for an n-tuple
 generateTuple :: Int -> TH.Q [TH.Dec]
 generateTuple n = join <$> sequenceA

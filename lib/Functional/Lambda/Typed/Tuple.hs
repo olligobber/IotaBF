@@ -46,6 +46,8 @@ instance Decode () where
 			L.Lambda (Leaf (L.Free (Left (Var "()")))) -> Just ()
 			_ -> Nothing
 
+-- TODO show instance
+
 -- Generate the above but for tuples of length 2 to 8
 generateTuples 8
 

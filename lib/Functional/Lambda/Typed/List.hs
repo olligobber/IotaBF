@@ -1,5 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DataKinds #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Functional.Lambda.Typed.List
 	( FList
@@ -30,18 +31,23 @@ module Functional.Lambda.Typed.List
 import Prelude hiding
 	( const, maybe, map, uncurry, concat, head, last, tail, init, null, foldr
 	, reverse, flip, id, foldl, repeat, cycle, elem, or, filter, zipWith, zip
+	, and
 	)
+import qualified Prelude as P
 
 import Functional.Lambda.Typed
-	( TypedInput, TypedCombinator, TypedLambda
+	( TypedInput, TypedCombinator, TypedLambda, Representable
 	, input, liftInput, ($$$), abstract, toCombinator, toLambda, reType
+	, fromTyped
 	)
 import Functional.Lambda.Typed.Function (const, compose, flip, id, fix)
 import Functional.Lambda.Typed.Maybe (just, nothing, maybe, toFMaybe)
 import Functional.Lambda.Typed.Tuple (mkTuple2, get2of2, uncurry)
 import Functional.Lambda.Typed.Functor (map)
 import Functional.Lambda.Typed.Eq (LambdaEq, eq)
-import Functional.Lambda.Typed.Bool (or, toFBool)
+import Functional.Lambda.Typed.Bool (or, toFBool, and)
+import Functional.Decode (Decode(..))
+import Functional.Reducible (($$))
 
 -- Functional equivalent of list type, basically does foldr
 type FList a b = b -> (a -> b -> b) -> b
@@ -52,7 +58,60 @@ toFList = reType
 fromFList :: TypedLambda (FList a b) v -> TypedLambda [a] v
 fromFList = reType
 
--- TODO instances
+instance LambdaEq a => LambdaEq [a] where
+	eq = toCombinator $ fix $$$
+		abstract (abstract $ abstract $
+			toFMaybe (
+				uncons $$$
+				liftInput (input :: TypedInput 2 [a])
+			) $$$ (
+				null $$$
+				liftInput (input :: TypedInput 1 [a])
+			) $$$ (
+				uncurry $$$
+				abstract (abstract $
+					toFMaybe (
+						uncons $$$
+						liftInput (input :: TypedInput 3 [a])
+					) $$$
+					toLambda False $$$ (
+						uncurry $$$
+						abstract (abstract $
+							and $$$ (
+								eq $$$
+								liftInput (input :: TypedInput 4 a) $$$
+								liftInput (input :: TypedInput 2 a)
+							) $$$ (
+								(input :: TypedInput 7 ([a] -> [a] -> Bool)) $$$
+								liftInput (input :: TypedInput 3 [a]) $$$
+								liftInput (input :: TypedInput 1 [a])
+							)
+						)
+					)
+				)
+			)
+		)
+
+instance Representable a => Representable [a] where
+	toLambda l = fromFList $ toCombinator $ abstract $ abstract $
+		P.foldr
+			(\a b ->
+				liftInput (input :: TypedInput 1 (a -> b -> b)) $$$
+				toLambda a $$$
+				b
+			)
+			(input :: TypedInput 2 b)
+			l
+
+instance Decode a => Decode [a] where
+	decodeLambda lambda = case
+		decodeLambda (fromTyped uncons $$ lambda) :: Maybe (Maybe (a, [a]))
+		of
+			Nothing -> Nothing
+			Just Nothing -> Just []
+			Just (Just (x, xs)) -> Just $ x:xs
+
+-- TODO other instances
 
 cons :: forall a. TypedCombinator (a -> [a] -> [a])
 cons = reType consF where
