@@ -20,7 +20,7 @@ module Functional.Lambda.Typed.Natural
 	, mod
 	) where
 
-import Prelude hiding (succ, maybe, pred, subtract, div, mod, concat)
+import Prelude hiding (succ, maybe, pred, subtract, div, mod)
 import Numeric.Natural (Natural)
 import Data.List (genericReplicate)
 import ValidLiterals (valid)
@@ -37,9 +37,9 @@ import Functional.Lambda.Typed.Eq (LambdaEq(..))
 import Functional.Decode (Decode(..))
 import Functional.Reducible (($$))
 import Functional.Lambda.Typed.Tuple (toFTuple2, mkTuple2, get1of2, get2of2)
-import Functional.Lambda.Typed.Render
-	(LambdaShow(..), RenderS, TypedRenderS, concat)
+import Functional.Lambda.Typed.Render (LambdaShow(..), RenderS, TypedRenderS)
 import Functional.Iota.Free (IFree)
+import Functional.Lambda.Typed.Semigroup (cat)
 
 -- Functional equivalent of natural numbers, composes its first input n times
 type FNatural a = (a -> a) -> a -> a
@@ -145,7 +145,7 @@ instance LambdaShow Natural where
 				liftFree ($$(valid "9") :: TypedRenderS) $$$
 			magicElse $$$
 			(
-				concat $$$
+				cat $$$
 				(liftInput (input :: TypedInput 2 (Natural -> RenderS)) $$$
 					(div $$$
 						liftInput (input :: TypedInput 1 Natural) $$$

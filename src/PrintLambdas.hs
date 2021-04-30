@@ -4,8 +4,8 @@
 -- import qualified Data.Map as M
 import Prelude hiding
 	( id, const, flip, and, or, not, show, curry, uncurry, maybe, succ, pred
-	, subtract, div, mod, concat, head, last, tail, init, null, foldr, reverse
-	, foldl, repeat, cycle, filter, zipWith, zip
+	, subtract, div, mod, head, last, tail, init, null, foldr, reverse, foldl
+	, repeat, cycle, filter, zipWith, zip
 	)
 
 import Functional.Iota.Free (renderIFree)
@@ -21,8 +21,8 @@ import Functional.Lambda.Typed.Maybe
 import Functional.Lambda.Typed.Natural
 	(succ, isZero, pred, add, mult, pow, subtract, divmod, div, mod)
 import Functional.Lambda.Typed.List
-	( cons, empty, append, concat, head, last, uncons, tail, init, singleton
-	, null, foldr, foldl, reverse, repeat, cycle, filter, zipWith, zip
+	( cons, empty, append, head, last, uncons, tail, init, singleton, null
+	, foldr, foldl, reverse, repeat, cycle, filter, zipWith, zip
 	)
 -- import Functional.Lambda.Typed.Render (show)
 -- import Functional.Lambda.Typed.Eq (eq, neq)
@@ -96,7 +96,6 @@ functions =
 	, $(makeEntry "cons" "Add an element to the start of a list")
 	, $(makeEntry "empty" "Empty list")
 	, $(makeEntry "append" "Add an element to the end of a list")
-	, $(makeEntry "concat" "Concatenate two lists")
 	, $(makeEntry "head" "Get the first element of a non empty list")
 	, $(makeEntry "last" "Get the last element of a non empty list")
 	, $(makeEntry "uncons"
@@ -116,6 +115,8 @@ functions =
 	, $(makeEntry "zipWith"
 		"Combine two lists element by element using the given function")
 	, $(makeEntry "zip" "Combine two lists element by element into pairs")
+	-- Semigroup
+		-- TODO
 	]
 
 -- Output all functions listed above

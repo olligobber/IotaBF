@@ -216,7 +216,7 @@ instanceDecode n = do
 			[]
 		]]
 
--- TODO show and functor instances
+-- TODO show, semigroup, and functor instances
 
 -- Generates all declarations needed for an n-tuple
 generateTuple :: Int -> TH.Q [TH.Dec]

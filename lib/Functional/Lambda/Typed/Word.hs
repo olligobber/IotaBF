@@ -17,7 +17,7 @@ import Data.Word (Word8)
 import Data.Bits (testBit, bit)
 import Control.Monad (guard)
 import ValidLiterals (valid)
-import Prelude hiding (show, concat)
+import Prelude hiding (show)
 
 import Functional.Decode (Decode(..))
 import Functional.Lambda.Typed
@@ -27,10 +27,10 @@ import Functional.Lambda.Typed
 import Functional.Lambda.Typed.Eq (LambdaEq(..))
 import Functional.Lambda.Typed.Tuple
 	(mkTuple2, mkTuple4, toFTuple2, toFTuple4, toFTuple8)
-import Functional.Lambda.Typed.Render
-	(LambdaShow(..), RenderS, TypedRenderS, concat)
+import Functional.Lambda.Typed.Render (LambdaShow(..), RenderS, TypedRenderS)
 import Functional.Iota.Free (IFree)
 import Functional.Lambda.Typed.Bool (toFBool)
+import Functional.Lambda.Typed.Semigroup (cat)
 
 -- Tuple representation of Nibble and Word8, most significant bit first
 type Nibble = (Bool,Bool,Bool,Bool)
@@ -68,7 +68,7 @@ instance Decode Word8 where
 -- Render a byte as 0x followed by two hex digits
 instance LambdaShow Word8 where
 	show = abstract $
-		concat $$$
+		cat $$$
 		liftFree ($$(valid "0x") :: TypedRenderS) $$$
 		(liftFree showByte $$$ liftInput (input :: TypedInput 1 Word8))
 
@@ -163,7 +163,7 @@ showByte :: TypedLambda (Word8 -> RenderS) IFree
 showByte = abstract $
 	toFTuple2 ( getNibbles $$$ liftInput (input :: TypedInput 1 Word8) ) $$$
 	abstract (abstract $
-		concat $$$
+		cat $$$
 		(liftFree showNibble $$$ liftInput (input :: TypedInput 2 Nibble)) $$$
 		(liftFree showNibble $$$ liftInput (input :: TypedInput 1 Nibble))
 	)

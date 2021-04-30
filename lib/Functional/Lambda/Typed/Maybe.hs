@@ -17,7 +17,7 @@ module Functional.Lambda.Typed.Maybe
 	, fromMaybe
 	) where
 
-import Prelude hiding (show, concat, maybe, map)
+import Prelude hiding (show, maybe, map)
 import ValidLiterals (valid)
 
 import Functional.Lambda.Typed
@@ -30,9 +30,10 @@ import Functional.Lambda (Lambda(Lambda), LambdaTerm(Free))
 import qualified Functional.Lambda as L
 import Functional.BinaryTree (BinaryTree(..))
 import Functional.Reducible (($$), Var(Var))
-import Functional.Lambda.Typed.Render (LambdaShow(..), TypedRenderS, concat)
+import Functional.Lambda.Typed.Render (LambdaShow(..), TypedRenderS)
 import qualified Functional.Lambda.Typed.Function as LF
 import Functional.Lambda.Typed.Functor (LambdaFunctor(..))
+import Functional.Lambda.Typed.Semigroup (cat)
 
 -- Functional equivalent of maybe type,
 -- Nothing returns its first input, Just applies its second input to its value
@@ -86,8 +87,8 @@ instance LambdaShow a => LambdaShow (Maybe a) where
 		liftInput (toFMaybe (input :: TypedInput 1 (Maybe a))) $$$
 		liftFree ($$(valid "Nothing") :: TypedRenderS) $$$
 		abstract (
-			concat $$$ (
-				concat $$$
+			cat $$$ (
+				cat $$$
 				liftFree ($$(valid "Maybe[") :: TypedRenderS) $$$
 				(liftFree show $$$ liftInput (input :: TypedInput 1 a))
 			) $$$
@@ -106,6 +107,8 @@ instance LambdaFunctor Maybe where
 				liftInput (input :: TypedInput 1 a)
 			)
 		)
+
+-- TODO Semigroup instance
 
 nothing :: forall a. TypedCombinator (Maybe a)
 nothing = fromFMaybe nothingF where

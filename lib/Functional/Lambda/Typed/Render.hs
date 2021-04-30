@@ -11,7 +11,6 @@ module Functional.Lambda.Typed.Render
 	, RenderS
 	, fromString
 	, fromStringS
-	, concat
 	, LambdaShow(..)
 	, LambdaRender(..)
 	, TypedRenderS
@@ -26,8 +25,9 @@ import Functional.Lambda.Typed.Function (id, flip, compose)
 import qualified Functional.Lambda as L
 import Functional.Reducible (($$))
 import Functional.Iota.Free (IFree)
+import Functional.Lambda.Typed.Semigroup (LambdaSemigroup, cat)
 
-import Prelude hiding (id, show, concat, flip)
+import Prelude hiding (id, show, flip)
 import ValidLiterals (Validate(..), Lift)
 
 -- Represents a string of free variables, or the identity
@@ -48,8 +48,8 @@ fromStringS :: Validate Char c => String -> Maybe (TypedLambda RenderS c)
 fromStringS s = TypedLambda . L.abstract . foldl ($$) (L.free Nothing) <$>
 	traverse (fmap (L.free . Just) . fromLiteral) s
 
-concat :: TypedCombinator (RenderS -> RenderS -> RenderS)
-concat = flip $$$ compose
+instance LambdaSemigroup RenderS where
+	cat = flip $$$ compose
 
 -- Allow compile time construction of renderings using template haskell
 instance (Lift c, Validate Char c) =>

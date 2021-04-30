@@ -1,5 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE InstanceSigs #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Functional.Lambda.Typed.List
@@ -9,7 +11,6 @@ module Functional.Lambda.Typed.List
 	, cons
 	, empty
 	, append
-	, concat
 	, head
 	, last
 	, uncons
@@ -29,25 +30,27 @@ module Functional.Lambda.Typed.List
 	) where
 
 import Prelude hiding
-	( const, maybe, map, uncurry, concat, head, last, tail, init, null, foldr
-	, reverse, flip, id, foldl, repeat, cycle, elem, or, filter, zipWith, zip
-	, and
+	( const, maybe, map, uncurry, head, last, tail, init, null, foldr, reverse
+	, flip, id, foldl, repeat, cycle, elem, or, filter, zipWith, zip, and, show
 	)
 import qualified Prelude as P
+import ValidLiterals (valid)
 
 import Functional.Lambda.Typed
 	( TypedInput, TypedCombinator, TypedLambda, Representable
 	, input, liftInput, ($$$), abstract, toCombinator, toLambda, reType
-	, fromTyped
+	, fromTyped, liftFree
 	)
 import Functional.Lambda.Typed.Function (const, compose, flip, id, fix)
 import Functional.Lambda.Typed.Maybe (just, nothing, maybe, toFMaybe)
 import Functional.Lambda.Typed.Tuple (mkTuple2, get2of2, uncurry)
-import Functional.Lambda.Typed.Functor (map)
+import Functional.Lambda.Typed.Functor (LambdaFunctor, map)
 import Functional.Lambda.Typed.Eq (LambdaEq, eq)
 import Functional.Lambda.Typed.Bool (or, toFBool, and)
 import Functional.Decode (Decode(..))
 import Functional.Reducible (($$))
+import Functional.Lambda.Typed.Render (LambdaShow, show, TypedRenderS, RenderS)
+import Functional.Lambda.Typed.Semigroup (LambdaSemigroup, cat)
 
 -- Functional equivalent of list type, basically does foldr
 type FList a b = b -> (a -> b -> b) -> b
@@ -111,7 +114,60 @@ instance Decode a => Decode [a] where
 			Just Nothing -> Just []
 			Just (Just (x, xs)) -> Just $ x:xs
 
--- TODO other instances
+instance LambdaShow a => LambdaShow [a] where
+	show = abstract $
+		toFMaybe (
+			toFList (liftInput (input :: TypedInput 1 [a])) $$$
+			nothing $$$
+			abstract (
+				maybe $$$ (
+					just $$$ (
+						cat $$$ (
+							liftFree show $$$
+							liftInput (input :: TypedInput 1 a)
+						) $$$
+						liftFree ($$(valid "]") :: TypedRenderS)
+					)
+				) $$$
+				abstract (
+					just $$$ (
+						cat $$$ (
+							cat $$$ (
+								liftFree show $$$
+								liftInput (input :: TypedInput 2 a)
+							) $$$
+							liftFree ($$(valid ",") :: TypedRenderS)
+						) $$$
+						liftInput (input :: TypedInput 1 RenderS)
+					)
+				)
+			)
+		) $$$
+		liftFree ($$(valid "List[]") :: TypedRenderS) $$$ (
+			cat $$$
+			liftFree ($$(valid "List[") :: TypedRenderS)
+		)
+
+instance LambdaFunctor [] where
+	map :: forall a b. TypedCombinator ((a -> b) -> [a] -> [b])
+	map = toCombinator $ abstract $ abstract $ fromFList $ abstract $ abstract $
+		toFList (liftInput (input :: TypedInput 3 [a])) $$$
+		liftInput (input :: TypedInput 2 c) $$$ (
+			compose $$$
+			liftInput (input :: TypedInput 1 (b -> c -> c)) $$$
+			(input :: TypedInput 4 (a -> b))
+		)
+
+instance LambdaSemigroup [a] where
+	cat = reType catF where
+		catF:: forall b. TypedCombinator (FList a b -> FList a b -> FList a b)
+		catF = toCombinator $ abstract $ abstract $ abstract $ abstract $
+			(input :: TypedInput 4 (FList a b)) $$$ (
+				liftInput (input :: TypedInput 3 (FList a b)) $$$
+				liftInput (input :: TypedInput 2 b) $$$
+				liftInput (input :: TypedInput 1 (a -> b -> b))
+			) $$$
+			liftInput (input :: TypedInput 1 (a -> b -> b))
 
 cons :: forall a. TypedCombinator (a -> [a] -> [a])
 cons = reType consF where
@@ -137,17 +193,6 @@ append = reType appendF where
 			liftInput (input :: TypedInput 1 (a -> b -> b)) $$$
 			liftInput (input :: TypedInput 3 a) $$$
 			liftInput (input :: TypedInput 2 b)
-		) $$$
-		liftInput (input :: TypedInput 1 (a -> b -> b))
-
-concat :: forall a. TypedCombinator ([a] -> [a] -> [a])
-concat = reType concatF where
-	concatF :: forall b. TypedCombinator (FList a b -> FList a b -> FList a b)
-	concatF = toCombinator $ abstract $ abstract $ abstract $ abstract $
-		(input :: TypedInput 4 (FList a b)) $$$ (
-			liftInput (input :: TypedInput 3 (FList a b)) $$$
-			liftInput (input :: TypedInput 2 b) $$$
-			liftInput (input :: TypedInput 1 (a -> b -> b))
 		) $$$
 		liftInput (input :: TypedInput 1 (a -> b -> b))
 
@@ -304,6 +349,7 @@ filter = reType filterF where
 			id
 		)
 
+-- TODO reimplement without fix
 zipWith :: forall a b c. TypedCombinator ((a -> b -> c) -> [a] -> [b] -> [c])
 zipWith = toCombinator $ abstract $
 	fix $$$ abstract ( abstract $ abstract $

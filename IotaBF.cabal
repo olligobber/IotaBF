@@ -49,6 +49,7 @@ library
                       , Functional.Lambda.Typed.Maybe
                       , Functional.Lambda.Typed.Natural
                       , Functional.Lambda.Typed.Render
+                      , Functional.Lambda.Typed.Semigroup
                       , Functional.Lambda.Typed.Tuple
                       , Functional.Lambda.Typed.Word
                       , THPrintType
