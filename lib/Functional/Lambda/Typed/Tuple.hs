@@ -24,6 +24,7 @@ import Functional.Lambda.Typed.Render (LambdaShow, TypedRenderS)
 import Functional.Lambda.Typed.Function (const, id)
 import Functional.Lambda.Typed.Semigroup (LambdaSemigroup, cat)
 import qualified Functional.Lambda.Typed.Render as TR
+import Functional.Lambda.Typed.Functor (LambdaFunctor, map)
 
 -- Functional equivalent of unit type: the identity
 type FUnit x = x -> x

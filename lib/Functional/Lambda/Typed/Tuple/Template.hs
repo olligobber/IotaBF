@@ -141,8 +141,8 @@ instanceRepresentable n = do
 		]]
 
 -- Constructor for n-tuples
--- mkTupleN :: Int -> TH.Q TH.Exp
--- mkTupleN n = TH.varE $ TH.mkName $ "mkTuple" <> show n
+mkTupleN :: Int -> TH.Q TH.Exp
+mkTupleN n = TH.varE $ TH.mkName $ "mkTuple" <> show n
 
 -- Declares the constructor for n-tuples
 declMkTupleN :: Int -> TH.Q [TH.Dec]
@@ -270,7 +270,75 @@ instanceShow n = do
 			[ TH.clause [] (TH.normalB showDef) [] ]
 		]
 
--- TODO semigroup, and functor instances
+-- Semigroup instance for n-tuples
+instanceSemigroup :: Int -> TH.Q TH.Dec
+instanceSemigroup n = do
+	typeVars <- replicateM n $ TH.newName "a"
+	let
+		tupleTypes = TH.varT <$> typeVars
+		tupleType = tupleN tupleTypes
+		lambdaSemigroup = TH.conT $ TH.mkName "LambdaSemigroup"
+		constraints = TH.appT lambdaSemigroup <$> tupleTypes
+		result = TH.appT lambdaSemigroup tupleType
+		catResult = foldl
+			(\f m -> [|
+				$f $$$ (
+					cat $$$
+					liftInput (input :: TypedInput $(typeLit $ 2*n-m)
+						$(tupleTypes !! m)) $$$
+					liftInput (input :: TypedInput $(typeLit $ n-m)
+						$(tupleTypes !! m))
+				)
+			|])
+			(mkTupleN n)
+			[0..n-1]
+		catdef = [| toCombinator $ abstract $ abstract $
+			$(toFTupleN n) (input :: TypedInput 2 $tupleType) $$$
+			$(abstractN n [|
+				$(toFTupleN n) (liftInput (input :: TypedInput $(typeLit $ n+1)
+					$tupleType)) $$$
+				$(abstractN n catResult)
+				|] )
+			|]
+	TH.instanceD (sequenceA constraints) result
+		[TH.funD (TH.mkName "cat") [TH.clause [] (TH.normalB catdef) []]]
+
+-- Functor instance for n-tuples
+instanceFunctor :: Int -> TH.Q TH.Dec
+instanceFunctor n = do
+	typeVars <- replicateM (n-1) $ TH.newName "a"
+	inputVar <- TH.newName "b"
+	outputVar <- TH.newName "c"
+	let
+		tupleTypes = TH.varT <$> typeVars
+		inputType = TH.varT inputVar
+		outputType = TH.varT outputVar
+		inputTupleType = tupleN $ tupleTypes <> [inputType]
+		-- outputTupleType = tupleN $ tupleTypes <> [outputType]
+		lambdaFunctor = TH.conT $ TH.mkName "LambdaFunctor"
+		result = TH.appT lambdaFunctor $
+			foldl TH.appT (TH.tupleT n) tupleTypes
+		remakeTuple = foldl
+			(\f m -> [|
+				$f $$$
+				liftInput (input :: TypedInput $(typeLit $ n-m)
+					$(tupleTypes !! m))
+			|])
+			(mkTupleN n)
+			[0..n-2]
+		mapDef = [| toCombinator $ abstract $ abstract $
+			$(toFTupleN n)
+				(liftInput (input :: TypedInput 1 $inputTupleType)) $$$
+			$(abstractN n [|
+				$remakeTuple $$$ (
+					(input :: TypedInput $(typeLit $ n+2)
+						($inputType -> $outputType)) $$$
+					liftInput (input :: TypedInput 1 $inputType)
+					)
+				|])
+			|]
+	TH.instanceD (pure []) result
+		[TH.funD (TH.mkName "map") [TH.clause [] (TH.normalB mapDef) []]]
 
 -- Generates all declarations needed for an n-tuple
 generateTuple :: Int -> TH.Q [TH.Dec]
@@ -283,6 +351,8 @@ generateTuple n = join <$> sequenceA
 	, declGetAllOfN n
 	, pure <$> instanceDecode n
 	, pure <$> instanceShow n
+	, pure <$> instanceSemigroup n
+	, pure <$> instanceFunctor n
 	]
 
 -- Generate all declarations for tuples of size 2 to n
