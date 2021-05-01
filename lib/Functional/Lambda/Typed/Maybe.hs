@@ -30,10 +30,10 @@ import Functional.Lambda (Lambda(Lambda), LambdaTerm(Free))
 import qualified Functional.Lambda as L
 import Functional.BinaryTree (BinaryTree(..))
 import Functional.Reducible (($$), Var(Var))
-import Functional.Lambda.Typed.Render (LambdaShow(..), TypedRenderS)
+import Functional.Lambda.Typed.Render (LambdaShow, show, TypedRenderS)
 import qualified Functional.Lambda.Typed.Function as LF
-import Functional.Lambda.Typed.Functor (LambdaFunctor(..))
-import Functional.Lambda.Typed.Semigroup (cat)
+import Functional.Lambda.Typed.Functor (LambdaFunctor, map)
+import Functional.Lambda.Typed.Semigroup (LambdaSemigroup, cat)
 
 -- Functional equivalent of maybe type,
 -- Nothing returns its first input, Just applies its second input to its value
@@ -108,7 +108,13 @@ instance LambdaFunctor Maybe where
 			)
 		)
 
--- TODO Semigroup instance
+instance LambdaSemigroup a => LambdaSemigroup (Maybe a) where
+	cat = maybe $$$
+		LF.id $$$ (
+			LF.compose $$$
+			map $$$
+			cat
+		)
 
 nothing :: forall a. TypedCombinator (Maybe a)
 nothing = fromFMaybe nothingF where

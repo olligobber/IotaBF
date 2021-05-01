@@ -7,7 +7,8 @@
 
 module Functional.Lambda.Typed.Tuple where
 
-import Prelude hiding (curry, uncurry)
+import Prelude hiding (curry, uncurry, const, id)
+import ValidLiterals (valid)
 
 import Functional.Lambda.Typed
 	( TypedCombinator, TypedLambda, TypedInput, Representable(..)
@@ -19,6 +20,10 @@ import Functional.Decode (Decode(..))
 import qualified Functional.Lambda as L
 import Functional.Reducible (Var(..), ($$))
 import Functional.BinaryTree (BinaryTree(Leaf))
+import Functional.Lambda.Typed.Render (LambdaShow, TypedRenderS)
+import Functional.Lambda.Typed.Function (const, id)
+import Functional.Lambda.Typed.Semigroup (LambdaSemigroup, cat)
+import qualified Functional.Lambda.Typed.Render as TR
 
 -- Functional equivalent of unit type: the identity
 type FUnit x = x -> x
@@ -33,9 +38,7 @@ instance LambdaEq () where
 	eq = toCombinator $ abstract $ abstract $ toLambda True
 
 instance Representable () where
-	toLambda () = fromFUnit unit where
-		unit :: forall x. TypedCombinator (FUnit x)
-		unit = toCombinator $ abstract (input :: TypedInput 1 x)
+	toLambda () = fromFUnit id
 
 instance Decode () where
 	decodeLambda lambda = case
@@ -46,7 +49,11 @@ instance Decode () where
 			L.Lambda (Leaf (L.Free (Left (Var "()")))) -> Just ()
 			_ -> Nothing
 
--- TODO show and semigroup instance
+instance LambdaShow () where
+	show = const $$$ ($$(valid "Tuple[]") :: TypedRenderS)
+
+instance LambdaSemigroup () where
+	cat = const $$$ id
 
 -- Generate the above but for tuples of length 2 to 8
 generateTuples 8

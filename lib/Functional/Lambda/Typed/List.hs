@@ -349,7 +349,8 @@ filter = reType filterF where
 			id
 		)
 
--- TODO reimplement without fix
+-- Could implement without fix, but then wouldn't work when first list is
+-- infinite
 zipWith :: forall a b c. TypedCombinator ((a -> b -> c) -> [a] -> [b] -> [c])
 zipWith = toCombinator $ abstract $
 	fix $$$ abstract ( abstract $ abstract $

@@ -9,14 +9,18 @@ module Functional.Lambda.Typed.Tuple.Template
 import qualified Language.Haskell.TH as TH
 import Control.Monad (replicateM, join)
 import Data.List (intersperse)
+import ValidLiterals (valid)
 
 import Functional.Lambda.Typed
 	( TypedCombinator, TypedLambda, TypedInput
 	, ($$$), input, abstract, toCombinator, reType, liftInput, fromTyped
+	, liftFree
 	)
 import Functional.Lambda.Typed.Eq (neq)
 import Functional.Lambda.Typed.Bool (magicIf, magicElseIf, magicElse)
 import Functional.Reducible (($$))
+import Functional.Lambda.Typed.Render (TypedRenderS)
+import qualified Functional.Lambda.Typed.Render as TR
 
 -- Turn an int into a type literal
 typeLit :: Int -> TH.Q TH.Type
@@ -216,7 +220,57 @@ instanceDecode n = do
 			[]
 		]]
 
--- TODO show, semigroup, and functor instances
+-- Show instance for n-tuples
+instanceShow :: Int -> TH.Q TH.Dec
+instanceShow n = do
+	typeVars <- replicateM n $ TH.newName "a"
+	let
+		tupleTypes = TH.varT <$> typeVars
+		lambdaShow = TH.conT $ TH.mkName "LambdaShow"
+		constraints = TH.appT lambdaShow <$> tupleTypes
+		result = TH.appT lambdaShow $ tupleN tupleTypes
+		showEach = zipWith
+			(\m t -> [|
+				liftFree TR.show $$$
+				liftInput (input :: TypedInput $(typeLit m) $t)
+			|])
+			[n,n-1..]
+			tupleTypes
+		showVals = foldl1
+			(\a b -> [|
+				cat $$$
+				$a $$$ (
+					cat $$$
+					liftFree
+						$(TH.unType <$>
+							(valid "," :: TH.Q (TH.TExp TypedRenderS))
+						)
+						$$$
+					$b
+				)
+			|])
+			(
+				[| liftFree
+					$(TH.unType <$>
+						(valid "Tuple[" :: TH.Q (TH.TExp TypedRenderS))
+					)
+				|] :
+				showEach <>
+				[ [| liftFree
+					$(TH.unType <$> (valid "]" :: TH.Q (TH.TExp TypedRenderS)))
+				|] ]
+			)
+		showDef = [| abstract $
+			$(toFTupleN n)
+				(liftInput (input :: TypedInput 1 $(tupleN tupleTypes))) $$$
+			$(abstractN n showVals)
+			|]
+	TH.instanceD (sequenceA constraints) result
+		[ TH.funD (TH.mkName "show")
+			[ TH.clause [] (TH.normalB showDef) [] ]
+		]
+
+-- TODO semigroup, and functor instances
 
 -- Generates all declarations needed for an n-tuple
 generateTuple :: Int -> TH.Q [TH.Dec]
@@ -228,6 +282,7 @@ generateTuple n = join <$> sequenceA
 	, declMkTupleN n
 	, declGetAllOfN n
 	, pure <$> instanceDecode n
+	, pure <$> instanceShow n
 	]
 
 -- Generate all declarations for tuples of size 2 to n
