@@ -1,48 +1,46 @@
-{-# LANGUAGE DeriveLift #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DataKinds #-}
 
 module Functional.Iota.Free
-	( IFree(fromIFree)
+	( IFree
+	, fromIFree
 	, iFree
 	, iFreeParser
 	, renderIFree
 	) where
 
-import Data.Char (isSpace)
-import ValidLiterals (Validate(..), Lift)
+import ValidLiterals (fromLiteral)
 import Text.Parsec as P
+import Data.Type.Set (AsSet)
 
 import Functional.Reducible (Reducible(..))
+import Functional.Free
+	( Free, Restriction, NoParens, NoWhitespace
+	, fromFree, renderFree, block, charParser
+	)
 
--- TODO add other kinds of free variables for other languages
+data NoIota
 
--- Free variables that can be safely be mixed with iota terms
-newtype IFree = IFree { fromIFree :: Char } deriving (Eq, Ord, Show, Lift)
+instance Restriction NoIota where
+	block = (== 'ι')
+
+type IotaSafe = {- AsSet -} '[NoIota, NoWhitespace, NoParens]
+
+type IFree = Free IotaSafe
+
+fromIFree :: IFree -> Char
+fromIFree = fromFree
 
 -- Checks if a char makes a valid free variable
 iFree :: Char -> Maybe IFree
-iFree '(' = Nothing -- Can't mix up free variables with brackets
-iFree ')' = Nothing
-iFree 'ι' = Nothing -- Can't mix up free variables with iota
-iFree c | isSpace c = Nothing -- Whitespace is filtered out when parsing
-iFree c = Just $ IFree c
+iFree = fromLiteral
 
 -- Parser for free variables, to be used in making more complex parsers
 iFreeParser :: P.Stream s m Char => P.ParsecT s u m IFree
-iFreeParser = P.try $ do
-	Just f <- iFree <$> anyChar
-	pure f
+iFreeParser = charParser
 
 -- Render a free variable as a string
 renderIFree :: IFree -> String
-renderIFree = pure . fromIFree
-
--- Allows free variables to be entered at compile time with template haskell
-instance Validate Char IFree where
-	fromLiteral = iFree
-
--- Free variables cannot be reduced
-instance Reducible t IFree where
-	reducible _ = Nothing
+renderIFree = renderFree

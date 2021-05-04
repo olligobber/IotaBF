@@ -34,10 +34,9 @@ library
     hs-source-dirs:     lib
     exposed-modules:    Functional.BinaryTree
                       , Functional.Decode
+                      , Functional.Free
                       , Functional.Iota
                       , Functional.Iota.Free
-                      , Functional.Reducible
-                      , Functional.SKI
                       , Functional.Lambda
                       , Functional.Lambda.SKI
                       , Functional.Lambda.Typed
@@ -52,9 +51,11 @@ library
                       , Functional.Lambda.Typed.Semigroup
                       , Functional.Lambda.Typed.Tuple
                       , Functional.Lambda.Typed.Word
+                      , Functional.Reducible
+                      , Functional.SKI
                       , THPrintType
-    other-modules:      Types.Nat
-                      , Types.MaybeN
+    other-modules:      Types.MaybeN
+                      , Types.Nat
                       , Functional.Lambda.Typed.Tuple.Template
     build-depends:      base >= 4.9
                       , validated-literals >= 0.3
@@ -62,6 +63,7 @@ library
                       , containers >= 0.6
                       , mtl >= 2.2
                       , template-haskell >= 2.16
+                      , type-level-sets >= 0.8
 
 executable LambdaToIota
     import:             shared-properties

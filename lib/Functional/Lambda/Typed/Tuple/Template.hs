@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Functional.Lambda.Typed.Tuple.Template
 	( generateTuples
@@ -236,29 +237,23 @@ instanceShow n = do
 			|])
 			[n,n-1..]
 			tupleTypes
+		validFree :: String -> TH.Q TH.Exp
+		validFree s =
+			[| $(TH.unType <$> (valid s :: TH.Q (TH.TExp TypedRenderS)))
+				:: TypedRenderS |]
 		showVals = foldl1
 			(\a b -> [|
 				cat $$$
 				$a $$$ (
 					cat $$$
-					liftFree
-						$(TH.unType <$>
-							(valid "," :: TH.Q (TH.TExp TypedRenderS))
-						)
-						$$$
+					liftFree $(validFree ",") $$$
 					$b
 				)
 			|])
 			(
-				[| liftFree
-					$(TH.unType <$>
-						(valid "Tuple[" :: TH.Q (TH.TExp TypedRenderS))
-					)
-				|] :
+				[| liftFree $(validFree "Tuple[") |] :
 				showEach <>
-				[ [| liftFree
-					$(TH.unType <$> (valid "]" :: TH.Q (TH.TExp TypedRenderS)))
-				|] ]
+				[ [| liftFree $(validFree "]") |] ]
 			)
 		showDef = [| abstract $
 			$(toFTupleN n)
