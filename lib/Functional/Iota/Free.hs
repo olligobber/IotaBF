@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DataKinds #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Functional.Iota.Free
 	( IFree
@@ -15,18 +16,13 @@ import ValidLiterals (fromLiteral)
 import Text.Parsec as P
 import Data.Type.Set (AsSet)
 
-import Functional.Reducible (Reducible(..))
 import Functional.Free
-	( Free, Restriction, NoParens, NoWhitespace
-	, fromFree, renderFree, block, charParser
-	)
+	(Free, Restriction, fromFree, renderFree, block, charParser)
 
-data NoIota
-
-instance Restriction NoIota where
+instance Restriction "NoIota" where
 	block = (== 'ι')
 
-type IotaSafe = {- AsSet -} '[NoIota, NoWhitespace, NoParens]
+type IotaSafe = AsSet '["NoIota", "NoWhitespace", "NoParens"]
 
 type IFree = Free IotaSafe
 

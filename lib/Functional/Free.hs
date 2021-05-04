@@ -1,6 +1,5 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -8,6 +7,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE DeriveLift #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Functional.Free
 	( Free(fromFree)
@@ -16,21 +16,22 @@ module Functional.Free
 	, charParser
 	, release
 	, toSet
-	, NoParens
-	, NoWhitespace
 	) where
 
 import ValidLiterals (Validate, fromLiteral, Lift)
-import Data.Kind (Type)
-import Data.Type.Set (Union, AsSet)
+import Data.Type.Set (Union, AsSet, Cmp)
 import Data.Char (isSpace)
 import Text.Parsec (ParsecT, Stream, try)
 import Text.Parsec.Char (anyChar)
+import GHC.TypeLits (Symbol, CmpSymbol)
 
 import Functional.Reducible (Reducible(..))
 
+type instance Cmp (a :: Symbol) (b :: Symbol) = CmpSymbol a b
+
 -- Type for Chars that satisfy a list of requirements, used for free variables
-newtype Free (r :: [Type]) = Free { fromFree :: Char } deriving (Eq, Ord, Lift)
+newtype Free (r :: [Symbol]) = Free { fromFree :: Char }
+	deriving (Eq, Ord, Lift)
 
 renderFree :: Free r -> String
 renderFree = pure . fromFree
@@ -47,7 +48,7 @@ instance Validate Char (Free '[]) where
 	fromLiteral = Just . Free
 
 -- Class of requirements for free variables
-class Restriction r where
+class Restriction (r :: Symbol) where
 	-- Returns true if a char is not allowed by the requirement
 	block :: Char -> Bool
 
@@ -77,15 +78,11 @@ toSet :: Free s -> Free (AsSet s)
 toSet = Free . fromFree
 
 -- Requirement that no parentheses are allowed
-data NoParens
-
-instance Restriction NoParens where
+instance Restriction "NoParens" where
 	block '(' = True
 	block ')' = True
 	block _ = False
 
 -- Requirement that no whitespace is allowed
-data NoWhitespace
-
-instance Restriction NoWhitespace where
+instance Restriction "NoWhitespace" where
 	block = isSpace
