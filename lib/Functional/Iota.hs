@@ -2,6 +2,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DataKinds #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Functional.Iota
 	( Iota(..)
@@ -9,15 +11,18 @@ module Functional.Iota
 	, iotaParser
 	, renderIota
 	, fromSKI
+	, IotaSafe
 	) where
 
 import qualified Text.Parsec as P
 import Control.Applicative ((<|>))
+import Data.Type.Set (AsSet)
 
 import Functional.SKI (SKI(..), HasSKI(..))
 import Functional.Lambda (Lambda, abstract, free)
 import Functional.Reducible (Reducible(..), Appliable(..))
 import Functional.BinaryTree (BinaryTree)
+import Functional.Free (Restriction, block)
 
 -- Iota combinator \x.xSK
 data Iota = Iota deriving (Eq, Ord, Show)
@@ -44,3 +49,8 @@ fromSKI :: SKI -> BinaryTree Iota
 fromSKI I = pure Iota $$ pure Iota
 fromSKI K = pure Iota $$ (pure Iota $$ fromSKI I)
 fromSKI S = pure Iota $$ fromSKI K
+
+instance Restriction "NoIota" where
+	block = (== 'ι')
+
+type IotaSafe = AsSet '["NoIota", "NoWhitespace", "NoParens"]

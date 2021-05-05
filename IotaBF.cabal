@@ -36,7 +36,6 @@ library
                       , Functional.Decode
                       , Functional.Free
                       , Functional.Iota
-                      , Functional.Iota.Free
                       , Functional.Lambda
                       , Functional.Lambda.SKI
                       , Functional.Lambda.Typed

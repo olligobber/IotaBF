@@ -2,7 +2,7 @@ import Functional.Lambda.Typed.Natural (add)
 import Functional.Lambda.Typed (toLambda, ($$$), fromTyped)
 import qualified Functional.Lambda.Typed.Render as LR
 import qualified Functional.Lambda as L
-import Functional.Iota.Free (renderIFree)
+import Functional.Free (renderFree)
 
 -- TODO use a number parser written in lambda calculus rather than haskell
 
@@ -10,5 +10,5 @@ import Functional.Iota.Free (renderIFree)
 main :: IO ()
 main = do
 	[a,b] <- words <$> getLine
-	putStrLn $ L.render renderIFree $ L.leftmostStrict $ fromTyped $
+	putStrLn $ L.render renderFree $ L.leftmostStrict $ fromTyped $
 		LR.render $$$ (add $$$ toLambda (read a) $$$ toLambda (read b))

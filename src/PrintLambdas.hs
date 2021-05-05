@@ -8,7 +8,7 @@ import Prelude hiding
 	, repeat, cycle, filter, zipWith, zip
 	)
 
-import Functional.Iota.Free (renderIFree)
+import Functional.Free (renderFree)
 import Functional.Lambda (render)
 import Functional.Lambda.Typed.Function
 	(id, const, compose, flip, apply, pipe, fix, on)
@@ -127,7 +127,7 @@ main = mapM_
 		putStrLn $ "Name: " <> name e
 		putStrLn $ "Description: " <> description e
 		putStrLn $ "Type: " <> ltype e
-		putStrLn $ "Definition: " <> render renderIFree (lambda e)
+		putStrLn $ "Definition: " <> render renderFree (lambda e)
 	)
 	functions
 	>> putStrLn ""
