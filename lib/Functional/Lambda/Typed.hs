@@ -8,7 +8,6 @@ module Functional.Lambda.Typed
 	( TypedLambda(..)
 	, TypedCombinator
 	, TypedInput
-	, free
 	, input
 	, liftInput
 	, liftFree
@@ -61,13 +60,10 @@ instance Show v => Show (TypedLambda t v) where
 	showsPrec d (TypedLambda l) = showParen (d>10) $
 		showString "TypedLambda " . showsPrec 11 l
 
-free :: v -> TypedLambda t v
-free = TypedLambda . L.free
-
 -- A free term whose DeBruijn index will be n after abstract has been called
 -- n times
 input :: Positive n => TypedLambda t n
-input = free maxmem
+input = pure maxmem
 
 -- Lift a term with inputs of index <=n to a type that can be abstracted m
 -- times, and may have free variables, using an fmapped absurd so the value

@@ -28,7 +28,7 @@ import Functional.Lambda.Typed.Eq (LambdaEq(..))
 import Functional.Lambda.Typed.Tuple
 	(mkTuple2, mkTuple4, toFTuple2, toFTuple4, toFTuple8)
 import Functional.Lambda.Typed.Render (LambdaShow(..), RenderS, TypedRenderS)
-import Functional.Free (Free)
+import Functional.VChar (VChar)
 import Functional.Iota (IotaSafe)
 import Functional.Lambda.Typed.Bool (toFBool)
 import Functional.Lambda.Typed.Semigroup (cat)
@@ -74,7 +74,7 @@ instance LambdaShow Word8 where
 		(liftFree showByte $$$ liftInput (input :: TypedInput 1 Word8))
 
 -- Render a nibble as a hex digit
-showNibble :: TypedLambda (Nibble -> RenderS) (Free IotaSafe)
+showNibble :: TypedLambda (Nibble -> RenderS) (VChar IotaSafe)
 showNibble = abstract $
 	toFTuple4 (liftInput (input :: TypedInput 1 Nibble)) $$$
 	abstract (abstract $ abstract $ abstract $
@@ -160,7 +160,7 @@ getNibbles = toCombinator $ abstract $
 	)
 
 -- Shows a byte as two hex digits
-showByte :: TypedLambda (Word8 -> RenderS) (Free IotaSafe)
+showByte :: TypedLambda (Word8 -> RenderS) (VChar IotaSafe)
 showByte = abstract $
 	toFTuple2 ( getNibbles $$$ liftInput (input :: TypedInput 1 Word8) ) $$$
 	abstract (abstract $

@@ -45,9 +45,9 @@ instance Decode () where
 	decodeLambda lambda = case
 		L.leftmostReduce $
 			(Right <$> lambda) $$
-			L.free (Left $ Var "()")
+			pure (Left $ Var "()")
 		of
-			L.Lambda (Leaf (L.Free (Left (Var "()")))) -> Just ()
+			L.Lambda (Leaf (L.LambdaFree (Left (Var "()")))) -> Just ()
 			_ -> Nothing
 
 instance LambdaShow () where

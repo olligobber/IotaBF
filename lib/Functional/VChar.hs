@@ -9,9 +9,9 @@
 {-# LANGUAGE DeriveLift #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Functional.Free
-	( Free(fromFree)
-	, renderFree
+module Functional.VChar
+	( VChar(fromVChar)
+	, renderVChar
 	, Restriction(..)
 	, charParser
 	, release
@@ -30,22 +30,22 @@ import Functional.Reducible (Reducible(..))
 type instance Cmp (a :: Symbol) (b :: Symbol) = CmpSymbol a b
 
 -- Type for Chars that satisfy a list of requirements, used for free variables
-newtype Free (r :: [Symbol]) = Free { fromFree :: Char }
+newtype VChar (r :: [Symbol]) = VChar { fromVChar :: Char }
 	deriving (Eq, Ord, Lift)
 
-renderFree :: Free r -> String
-renderFree = pure . fromFree
+renderVChar :: VChar r -> String
+renderVChar = pure . fromVChar
 
-instance Show (Free r) where
-	showsPrec d (Free x) = showParen (d > 10) $
-		showString "Free " . showsPrec 11 x
+instance Show (VChar r) where
+	showsPrec d (VChar x) = showParen (d > 10) $
+		showString "VChar " . showsPrec 11 x
 
-instance Reducible t (Free r) where
+instance Reducible t (VChar r) where
 	reducible _ = Nothing
 
 -- No requirements means any Char is valid
-instance Validate Char (Free '[]) where
-	fromLiteral = Just . Free
+instance Validate Char (VChar '[]) where
+	fromLiteral = Just . VChar
 
 -- Class of requirements for free variables
 class Restriction (r :: Symbol) where
@@ -53,11 +53,12 @@ class Restriction (r :: Symbol) where
 	block :: Char -> Bool
 
 -- Add a requirement to a list
-instance (Restriction r, Validate Char (Free rs)) =>
-	Validate Char (Free (r:rs)) where
+instance (Restriction r, Validate Char (VChar rs)) =>
+	Validate Char (VChar (r:rs)) where
 		fromLiteral c
 			| (block @r) c = Nothing
-			| otherwise = Free . fromFree <$> (fromLiteral c :: Maybe (Free rs))
+			| otherwise =
+				VChar . fromVChar <$> (fromLiteral c :: Maybe (VChar rs))
 
 -- Parser for any validated char
 charParser :: (Validate Char t, Stream s m Char) => ParsecT s u m t
@@ -69,13 +70,13 @@ charParser = try $ do
 
 -- Loosen the requirements on a char. Using type applications to specify s and t
 -- is recommended
-release :: Free (Union s t) -> Free s
-release = Free . fromFree
+release :: VChar (Union s t) -> VChar s
+release = VChar . fromVChar
 
 -- Convert a list of requirements to one without repeats, useful in combination
 -- with release
-toSet :: Free s -> Free (AsSet s)
-toSet = Free . fromFree
+toSet :: VChar s -> VChar (AsSet s)
+toSet = VChar . fromVChar
 
 -- Requirement that no parentheses are allowed
 instance Restriction "NoParens" where

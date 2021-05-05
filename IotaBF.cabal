@@ -34,7 +34,6 @@ library
     hs-source-dirs:     lib
     exposed-modules:    Functional.BinaryTree
                       , Functional.Decode
-                      , Functional.Free
                       , Functional.Iota
                       , Functional.Lambda
                       , Functional.Lambda.SKI
@@ -52,6 +51,7 @@ library
                       , Functional.Lambda.Typed.Word
                       , Functional.Reducible
                       , Functional.SKI
+                      , Functional.VChar
                       , THPrintType
     other-modules:      Types.MaybeN
                       , Types.Nat

@@ -11,14 +11,14 @@ import qualified Language.Haskell.TH as TH
 import Functional.Lambda (Lambda)
 import Functional.Lambda.Typed (fromTyped)
 import THPrintType (printType)
-import Functional.Free (Free)
+import Functional.VChar (VChar)
 import Functional.Iota (IotaSafe)
 
 data FunctionEntry = FunctionEntry
 	{ name :: String
 	, description :: String
 	, ltype :: String
-	, lambda :: Lambda (Free IotaSafe)
+	, lambda :: Lambda (VChar IotaSafe)
 	}
 
 -- Test if a type constructor is for typed lambda calculus

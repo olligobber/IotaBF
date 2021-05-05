@@ -26,7 +26,7 @@ import Functional.Lambda.Typed
 	)
 import Functional.Lambda.Typed.Eq (LambdaEq(..))
 import Functional.Decode (Decode(..))
-import Functional.Lambda (Lambda(Lambda), LambdaTerm(Free))
+import Functional.Lambda (Lambda(Lambda), LambdaTerm(LambdaFree))
 import qualified Functional.Lambda as L
 import Functional.BinaryTree (BinaryTree(..))
 import Functional.Reducible (($$), Var(Var))
@@ -71,11 +71,11 @@ instance Decode a => Decode (Maybe a) where
 	decodeLambda lambda = case
 		L.leftmostReduce $
 			(Right <$> lambda) $$
-			L.free (Left $ Var "Nothing") $$
-			L.free (Left $ Var "Just")
+			pure (Left $ Var "Nothing") $$
+			pure (Left $ Var "Just")
 		of
-			Lambda (Leaf (Free (Left (Var "Nothing")))) -> Just Nothing
-			Lambda (Leaf (Free (Left (Var "Just"))) :^: x) ->
+			Lambda (Leaf (LambdaFree (Left (Var "Nothing")))) -> Just Nothing
+			Lambda (Leaf (LambdaFree (Left (Var "Just"))) :^: x) ->
 				-- Remove any "Nothing" or "Just" that ended up in x
 				case traverse (either (const Nothing) Just) (Lambda x) of
 					Nothing -> Nothing

@@ -38,7 +38,7 @@ import Functional.Decode (Decode(..))
 import Functional.Reducible (($$))
 import Functional.Lambda.Typed.Tuple (toFTuple2, mkTuple2, get1of2, get2of2)
 import Functional.Lambda.Typed.Render (LambdaShow(..), RenderS, TypedRenderS)
-import Functional.Free (Free)
+import Functional.VChar (VChar)
 import Functional.Iota (IotaSafe)
 import Functional.Lambda.Typed.Semigroup (cat)
 
@@ -86,7 +86,7 @@ instance LambdaShow Natural where
 	-- to remove the last digit and recurse on the leading digits
 	show = fix $$$ showF where
 		showF :: TypedLambda
-			((Natural -> RenderS) -> Natural -> RenderS) (Free IotaSafe)
+			((Natural -> RenderS) -> Natural -> RenderS) (VChar IotaSafe)
 		showF = abstract $ abstract $
 			magicIf $$$
 				(isZero $$$ liftInput (input :: TypedInput 1 Natural)) $$$

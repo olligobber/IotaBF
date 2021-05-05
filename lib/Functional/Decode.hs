@@ -7,7 +7,7 @@ module Functional.Decode
 
 import Functional.Reducible (Reducible, Var)
 import Functional.BinaryTree (BinaryTree, fromBinaryTree)
-import Functional.Lambda (Lambda, LambdaTerm, free)
+import Functional.Lambda (Lambda, LambdaTerm)
 
 -- Class of types that can be converted from their lambda calculus encoding
 class Decode t where
@@ -19,4 +19,4 @@ class Decode t where
 decodeBT ::
 	(Decode t, Reducible (BinaryTree (LambdaTerm (Either (Var String) x))) x) =>
 	BinaryTree x -> Maybe t
-decodeBT = decodeLambda . fromBinaryTree . fmap free
+decodeBT = decodeLambda . fromBinaryTree . fmap pure

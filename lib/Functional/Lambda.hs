@@ -11,7 +11,6 @@ module Functional.Lambda
 	( LambdaTerm(..)
 	, Lambda(..)
 	, LambdaCombinator
-	, free
 	, abstract
 	, render
 	, substitute
@@ -34,7 +33,7 @@ import qualified Functional.BinaryTree as BT
 import Functional.Reducible (Appliable(..), Reducible(..))
 
 -- A leaf in the application tree of lambda calculus
-data LambdaTerm v = Abstraction (Lambda v) | Bound Int | Free v
+data LambdaTerm v = Abstraction (Lambda v) | Bound Int | LambdaFree v
 	deriving (Eq, Ord, Show, Lift)
 
 -- A term in lambda calculus, parameterised by the type of free variables
@@ -47,28 +46,28 @@ type LambdaCombinator = forall v. Lambda v
 instance Functor LambdaTerm where
 	fmap f (Abstraction l) = Abstraction $ f <$> l
 	fmap _ (Bound i) = Bound i
-	fmap f (Free x) = Free $ f x
+	fmap f (LambdaFree x) = LambdaFree $ f x
 
 instance Foldable LambdaTerm where
 	foldMap f (Abstraction l) = foldMap f l
 	foldMap _ (Bound _) = mempty
-	foldMap f (Free x) = f x
+	foldMap f (LambdaFree x) = f x
 
 instance Traversable LambdaTerm where
 	sequenceA (Abstraction l) = Abstraction <$> sequenceA l
 	sequenceA (Bound i) = pure $ Bound i
-	sequenceA (Free x) = Free <$> x
+	sequenceA (LambdaFree x) = LambdaFree <$> x
 
 instance Applicative LambdaTerm where
-	pure = Free
+	pure = LambdaFree
 	Abstraction (Lambda f) <*> x = Abstraction $ Lambda $ (<*> x) <$> f
 	Bound i <*> _ = Bound i
-	Free f <*> x = f <$> x
+	LambdaFree f <*> x = f <$> x
 
 instance Monad LambdaTerm where
 	Abstraction (Lambda x) >>= f = Abstraction $ Lambda $ (>>= f) <$> x
 	Bound i >>= _ = Bound i
-	Free x >>= f = f x
+	LambdaFree x >>= f = f x
 
 instance Functor Lambda where
 	fmap f (Lambda x) = Lambda $ fmap f <$> x
@@ -80,7 +79,7 @@ instance Traversable Lambda where
 	sequenceA (Lambda x) = Lambda <$> traverse sequenceA x
 
 instance Applicative Lambda where
-	pure = free
+	pure = Lambda . Leaf . LambdaFree
 	Lambda f <*> Lambda x = Lambda $ (<*>) <$> f <*> x
 
 instance Monad Lambda where
@@ -89,7 +88,7 @@ instance Monad Lambda where
 		bindTerm :: LambdaTerm a -> BinaryTree (LambdaTerm b)
 		bindTerm (Abstraction y) = pure $ Abstraction $ y >>= f
 		bindTerm (Bound i) = pure $ Bound i
-		bindTerm (Free y) = getTree $ f y
+		bindTerm (LambdaFree y) = getTree $ f y
 
 instance Show v => Show (Lambda v) where
 	showsPrec d (Lambda x) = showParen (d>10) $
@@ -97,10 +96,6 @@ instance Show v => Show (Lambda v) where
 
 instance Appliable (Lambda v) where
 	Lambda x $$ Lambda y = Lambda $ x :^: y
-
--- Simple free variable
-free :: v -> Lambda v
-free = Lambda . Leaf . Free
 
 -- M[Nothing] => \x.M[x]
 abstract :: Lambda (Maybe v) -> Lambda v
@@ -110,8 +105,8 @@ abstract (Lambda t) = Lambda $ Leaf $ Abstraction $ Lambda $ bindWith 1 <$> t
 		bindWith n (Abstraction (Lambda s)) =
 			Abstraction $ Lambda $ bindWith (n+1) <$> s
 		bindWith _ (Bound i) = Bound i
-		bindWith _ (Free (Just v)) = Free v
-		bindWith n (Free Nothing) = Bound n
+		bindWith _ (LambdaFree (Just v)) = LambdaFree v
+		bindWith n (LambdaFree Nothing) = Bound n
 
 -- Infinite list of variable names used for rendering bound variables
 variableNames :: [String]
@@ -131,7 +126,7 @@ render renderVar top = renderDepth 0 top where
 	renderTerm d (Abstraction l) =
 		"(λ" <> availVariables !! d <> "." <> renderDepth (d+1) l <> ")"
 	renderTerm d (Bound i) = availVariables !! (d-i)
-	renderTerm _ (Free v) = renderVar v
+	renderTerm _ (LambdaFree v) = renderVar v
 
 	availVariables :: [String]
 	availVariables = filter (`notElem` freeVariables) variableNames
@@ -159,7 +154,7 @@ instance Reducible (BinaryTree (LambdaTerm v)) v =>
 		_ -> error "Wrong number of arguments"
 		)
 	reducible (Bound _) = Nothing
-	reducible (Free x) = reducible x
+	reducible (LambdaFree x) = reducible x
 
 -- Perform a step of leftmost reduction if possible
 leftmostStep ::
@@ -234,7 +229,7 @@ lambdaParser freeParser = runReaderT lambdaParserR emptyBoundState where
 	lambdaTermParser =
 		fullAbstractionParser <|>
 		Bound <$> boundVariableParser <|>
-		Free <$> lift freeParser
+		LambdaFree <$> lift freeParser
 
 	-- Parse a variable without using info from the state
 	variableParser :: P.ParsecT s u m String

@@ -19,17 +19,17 @@ import Control.Applicative ((<|>))
 import Data.Type.Set (AsSet)
 
 import Functional.SKI (SKI(..), HasSKI(..))
-import Functional.Lambda (Lambda, abstract, free)
+import Functional.Lambda (Lambda, abstract)
 import Functional.Reducible (Reducible(..), Appliable(..))
 import Functional.BinaryTree (BinaryTree)
-import Functional.Free (Restriction, block)
+import Functional.VChar (Restriction, block)
 
 -- Iota combinator \x.xSK
 data Iota = Iota deriving (Eq, Ord, Show)
 
 -- Representation in lambda calculus using s and k as free variables
 toLambda :: HasSKI v => Iota -> Lambda v
-toLambda Iota = abstract $ free Nothing $$ s $$ k
+toLambda Iota = abstract $ pure Nothing $$ s $$ k
 
 instance (Appliable t, HasSKI t) => Reducible t Iota where
 	reducible Iota = Just (1, \case

@@ -30,7 +30,7 @@ import Functional.Lambda.Typed
 import Functional.Lambda.Typed.Function (compose, id)
 import Functional.Reducible (($$), Var(Var))
 import Functional.BinaryTree (BinaryTree(Leaf))
-import Functional.Lambda (Lambda(Lambda), LambdaTerm(Free))
+import Functional.Lambda (Lambda(Lambda), LambdaTerm(LambdaFree))
 import qualified Functional.Lambda as L
 import Functional.Lambda.Typed.Render (LambdaShow(..), TypedRenderS)
 
@@ -58,11 +58,11 @@ instance Decode Bool where
 	decodeLambda lambda = case
 		L.leftmostReduce $
 			(Right <$> lambda) $$
-			L.free (Left $ Var "True") $$
-			L.free (Left $ Var "False")
+			pure (Left $ Var "True") $$
+			pure (Left $ Var "False")
 		of
-			Lambda (Leaf (Free (Left (Var "True")))) -> Just True
-			Lambda (Leaf (Free (Left (Var "False")))) -> Just False
+			Lambda (Leaf (LambdaFree (Left (Var "True")))) -> Just True
+			Lambda (Leaf (LambdaFree (Left (Var "False")))) -> Just False
 			_ -> Nothing
 
 instance LambdaShow Bool where

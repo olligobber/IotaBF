@@ -57,8 +57,8 @@ pipe = toCombinator $ abstract $ abstract $
 -- a type after
 fix :: TypedCombinator ((a -> a) -> a)
 fix = TypedLambda $ L.abstract $
-	L.abstract (L.free Nothing $$ L.free Nothing) $$
-	L.abstract (L.free (Just Nothing) $$ (L.free Nothing $$ L.free Nothing))
+	L.abstract (pure Nothing $$ pure Nothing) $$
+	L.abstract (pure (Just Nothing) $$ (pure Nothing $$ pure Nothing))
 
 on :: forall a b c. TypedCombinator ((b -> b -> c) -> (a -> b) -> a -> a -> c)
 on = toCombinator $ abstract $ abstract $ abstract $ abstract $

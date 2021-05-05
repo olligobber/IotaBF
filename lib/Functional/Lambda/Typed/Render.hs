@@ -24,7 +24,7 @@ import Functional.Lambda.Typed
 import Functional.Lambda.Typed.Function (id, flip, compose)
 import qualified Functional.Lambda as L
 import Functional.Reducible (($$))
-import Functional.Free (Free)
+import Functional.VChar (VChar)
 import Functional.Iota (IotaSafe)
 import Functional.Lambda.Typed.Semigroup (LambdaSemigroup, cat)
 
@@ -37,17 +37,17 @@ data Rendering
 -- Allows for concatenation via function composition
 type RenderS = Rendering -> Rendering
 
-type TypedRenderS = TypedLambda RenderS (Free IotaSafe)
-type TypedRendering = TypedLambda Rendering (Free IotaSafe)
+type TypedRenderS = TypedLambda RenderS (VChar IotaSafe)
+type TypedRendering = TypedLambda Rendering (VChar IotaSafe)
 
 fromString :: Validate Char c => String -> Maybe (TypedLambda Rendering c)
 fromString "" = Just $ reType id
 fromString s = TypedLambda . foldl1 ($$) <$>
-	traverse (fmap L.free . fromLiteral) s
+	traverse (fmap pure . fromLiteral) s
 
 fromStringS :: Validate Char c => String -> Maybe (TypedLambda RenderS c)
-fromStringS s = TypedLambda . L.abstract . foldl ($$) (L.free Nothing) <$>
-	traverse (fmap (L.free . Just) . fromLiteral) s
+fromStringS s = TypedLambda . L.abstract . foldl ($$) (pure Nothing) <$>
+	traverse (fmap (pure . Just) . fromLiteral) s
 
 instance LambdaSemigroup RenderS where
 	cat = flip $$$ compose
@@ -62,13 +62,13 @@ instance (Lift c, Validate Char c) =>
 		fromLiteral = fromStringS
 
 class LambdaShow t where
-	show :: TypedLambda (t -> RenderS) (Free IotaSafe)
+	show :: TypedLambda (t -> RenderS) (VChar IotaSafe)
 
 class LambdaRender t where
-	render :: TypedLambda (t -> Rendering) (Free IotaSafe)
+	render :: TypedLambda (t -> Rendering) (VChar IotaSafe)
 
 instance LambdaShow t => LambdaRender t where
-	render :: TypedLambda (t -> Rendering) (Free IotaSafe)
+	render :: TypedLambda (t -> Rendering) (VChar IotaSafe)
 	render = abstract $
 		liftFree show $$$
 		liftInput (input :: TypedInput 1 t) $$$
