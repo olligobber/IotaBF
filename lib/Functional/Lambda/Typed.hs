@@ -22,9 +22,7 @@ import GHC.TypeNats (Nat)
 import Data.Void (absurd)
 import ValidLiterals (Lift)
 import NatTypes
-	( S(S,Z), Z, Peano
-	, Positive, largest, type (|->), convert, type (<=), increase
-	)
+	( S, Peano, Positive, largest, type (|->), convert, type (<=), increase )
 
 import qualified Functional.Lambda as L
 import Functional.Reducible (($$))
@@ -65,18 +63,18 @@ instance Show v => Show (TypedLambda t v) where
 -- A free term whose DeBruijn index will be n after abstract has been called
 -- n times
 input :: Positive n => TypedLambda t n
-input = pure maxmem
+input = pure largest
 
 -- Lift a term with inputs of index <=n to a type that can be abstracted m
 -- times, and may have free variables, using an fmapped absurd so the value
 -- doesn't change
-liftInput :: n <= m => TypedLambda t n -> TypedLambda t m
-liftInput = fmap generalise
+liftInput :: n |-> m => TypedLambda t n -> TypedLambda t m
+liftInput = fmap convert
 
 -- Lift a term with free variables to a type that can be abstracted many times,
 -- using composed Justs so the value does change
-liftFree :: MaybeN a b => TypedLambda t a -> TypedLambda t b
-liftFree = fmap justn
+liftFree :: a <= b => TypedLambda t a -> TypedLambda t b
+liftFree = fmap increase
 
 {-
 It is recommended to specify the type of the variables being abstracted as well
@@ -103,7 +101,7 @@ isOne = abstract $ (input :: TypedInput 1 Natural) $$$ predNat $$$ isZero
 Also note that using ScopedTypeVariables for generic functions is recommended
 to allow them to be type checked.
 -}
-abstract :: TypedLambda b (Maybe t) -> TypedLambda (a -> b) t
+abstract :: TypedLambda b (S t) -> TypedLambda (a -> b) t
 abstract (TypedLambda l) = TypedLambda $ L.abstract l
 
 toCombinator :: TypedInput 0 t -> TypedCombinator t

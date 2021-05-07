@@ -27,6 +27,7 @@ import Functional.Reducible (($$))
 import Functional.VChar (VChar)
 import Functional.Iota (IotaSafe)
 import Functional.Lambda.Typed.Semigroup (LambdaSemigroup, cat)
+import NatTypes (S(S,Z))
 
 import Prelude hiding (id, show, flip)
 import ValidLiterals (Validate(..), Lift)
@@ -46,8 +47,8 @@ fromString s = TypedLambda . foldl1 ($$) <$>
 	traverse (fmap pure . fromLiteral) s
 
 fromStringS :: Validate Char c => String -> Maybe (TypedLambda RenderS c)
-fromStringS s = TypedLambda . L.abstract . foldl ($$) (pure Nothing) <$>
-	traverse (fmap (pure . Just) . fromLiteral) s
+fromStringS s = TypedLambda . L.abstract . foldl ($$) (pure Z) <$>
+	traverse (fmap (pure . S) . fromLiteral) s
 
 instance LambdaSemigroup RenderS where
 	cat = flip $$$ compose

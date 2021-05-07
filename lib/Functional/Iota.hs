@@ -23,13 +23,14 @@ import Functional.Lambda (Lambda, abstract)
 import Functional.Reducible (Reducible(..), Appliable(..))
 import Functional.BinaryTree (BinaryTree)
 import Functional.VChar (Restriction, block)
+import NatTypes (S(Z))
 
 -- Iota combinator \x.xSK
 data Iota = Iota deriving (Eq, Ord, Show)
 
 -- Representation in lambda calculus using s and k as free variables
 toLambda :: HasSKI v => Iota -> Lambda v
-toLambda Iota = abstract $ pure Nothing $$ s $$ k
+toLambda Iota = abstract $ pure Z $$ s $$ k
 
 instance (Appliable t, HasSKI t) => Reducible t Iota where
 	reducible Iota = Just (1, \case

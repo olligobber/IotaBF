@@ -4,10 +4,12 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module NatTypes
 	( S(..)
 	, Z
+	, Peano
 	, Positive
 	, largest
 	, type (|->)
@@ -27,6 +29,23 @@ data S x = S x | Z deriving (Eq, Ord, Show)
 type Z = Void
 
 -- A type made of n S's applied to a Z has n values, representing zero to n-1
+instance Num Z where
+	(+) = absurd
+	(*) = absurd
+	abs = absurd
+	signum = absurd
+	fromInteger _ = error "Integer out of range"
+	negate = absurd
+
+instance Num n => Num (S n) where
+	(+) = error "Addition not yet supported for Peano nats"
+	(*) = error "Multiplication not yet supported for Peano nats"
+	abs = error "Abs not yet supported for Peano nats"
+	signum = error "Signum not yet supported for Peano nats"
+	fromInteger 0 = Z
+	fromInteger n | n > 0 = S $ fromInteger $ n-1
+	fromInteger _ = error "Integer out of range"
+	negate = error "Negate not yet supported for Peano nats"
 
 instance Functor S where
 	fmap f (S x) = S $ f x
