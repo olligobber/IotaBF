@@ -31,6 +31,7 @@ import ValidLiterals (Lift)
 import Functional.BinaryTree (BinaryTree(..), renderL, treeParserL)
 import qualified Functional.BinaryTree as BT
 import Functional.Reducible (Appliable(..), Reducible(..))
+import NatTypes (S(S,Z))
 
 -- A leaf in the application tree of lambda calculus
 data LambdaTerm v = Abstraction (Lambda v) | Bound Int | LambdaFree v
@@ -97,16 +98,16 @@ instance Show v => Show (Lambda v) where
 instance Appliable (Lambda v) where
 	Lambda x $$ Lambda y = Lambda $ x :^: y
 
--- M[Nothing] => \x.M[x]
-abstract :: Lambda (Maybe v) -> Lambda v
+-- M[Z] => \x.M[x]
+abstract :: Lambda (S v) -> Lambda v
 abstract (Lambda t) = Lambda $ Leaf $ Abstraction $ Lambda $ bindWith 1 <$> t
 	where
-		bindWith :: Int -> LambdaTerm (Maybe v) -> LambdaTerm v
+		bindWith :: Int -> LambdaTerm (S v) -> LambdaTerm v
 		bindWith n (Abstraction (Lambda s)) =
 			Abstraction $ Lambda $ bindWith (n+1) <$> s
 		bindWith _ (Bound i) = Bound i
-		bindWith _ (LambdaFree (Just v)) = LambdaFree v
-		bindWith n (LambdaFree Nothing) = Bound n
+		bindWith _ (LambdaFree (S v)) = LambdaFree v
+		bindWith n (LambdaFree Z) = Bound n
 
 -- Infinite list of variable names used for rendering bound variables
 variableNames :: [String]

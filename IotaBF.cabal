@@ -53,9 +53,8 @@ library
                       , Functional.SKI
                       , Functional.VChar
                       , THPrintType
-    other-modules:      Types.MaybeN
-                      , Types.Nat
-                      , Functional.Lambda.Typed.Tuple.Template
+    other-modules:      Functional.Lambda.Typed.Tuple.Template
+                      , NatTypes
     build-depends:      base >= 4.9
                       , validated-literals >= 0.3
                       , parsec >= 3.1

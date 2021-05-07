@@ -19,10 +19,12 @@ module Functional.Lambda.Typed
 	) where
 
 import GHC.TypeNats (Nat)
-import Types.Nat (Peano, Positive(..), type (<=)(..))
-import Types.MaybeN (MaybeN(justn))
 import Data.Void (absurd)
 import ValidLiterals (Lift)
+import NatTypes
+	( S(S,Z), Z, Peano
+	, Positive, largest, type (|->), convert, type (<=), increase
+	)
 
 import qualified Functional.Lambda as L
 import Functional.Reducible (($$))
