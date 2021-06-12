@@ -1,18 +1,16 @@
-import Text.Parsec (ParseError, parse, many, noneOf)
+import Text.Parsec (ParseError, parse, eof)
 import Data.Char (isSpace)
 import System.Environment (getArgs)
 
 import Functional.Lambda
-	(Lambda, render, leftmostReduce, leftmostStrict, lambdaParser)
-import Functional.Reducible (Var(..))
+	(Lambda, render, leftmostReduce, leftmostStrict, lambdaParser, LambdaSafe)
+import Functional.VChar (VChar, renderVChar, charParser)
 
-parseLambda :: String -> Either ParseError (Lambda (Var String))
-parseLambda = parse
-	(lambdaParser $ Var <$> many (noneOf "()\\λ"))
-	"Standard Input"
+parseLambda :: String -> Either ParseError (Lambda (VChar LambdaSafe))
+parseLambda = parse (lambdaParser charParser <* eof) "Standard Input"
 
-printLambda :: Lambda (Var String) -> String
-printLambda = render getVar
+printLambda :: Lambda (VChar LambdaSafe) -> String
+printLambda = render renderVChar
 
 -- Evaluate lambda calculus to WHNF, acting strict on free variables if
 -- the flag is enabled

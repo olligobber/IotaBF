@@ -6,6 +6,8 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE DeriveLift #-}
+{-# LANGUAGE DataKinds #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Functional.Lambda
 	( LambdaTerm(..)
@@ -18,6 +20,7 @@ module Functional.Lambda
 	, leftmostReduce
 	, leftmostStrict
 	, lambdaParser
+	, LambdaSafe
 	) where
 
 import qualified Data.Set as S
@@ -27,11 +30,13 @@ import Control.Monad.Reader (ReaderT, runReaderT, asks, local, mapReaderT)
 import Control.Monad.Trans (lift)
 import Control.Applicative ((<|>))
 import ValidLiterals (Lift)
+import Data.Type.Set (AsSet)
 
 import Functional.BinaryTree (BinaryTree(..), renderL, treeParserL)
 import qualified Functional.BinaryTree as BT
 import Functional.Reducible (Appliable(..), Reducible(..))
 import NatTypes (S(S,Z))
+import Functional.VChar (Restriction(..))
 
 -- A leaf in the application tree of lambda calculus
 data LambdaTerm v = Abstraction (Lambda v) | Bound Int | LambdaFree v
@@ -235,3 +240,11 @@ lambdaParser freeParser = runReaderT lambdaParserR emptyBoundState where
 	-- Parse a variable without using info from the state
 	variableParser :: P.ParsecT s u m String
 	variableParser = (:) <$> P.oneOf ['a'..'z'] <*> P.many (P.char '\'')
+
+instance Restriction "NoLambda" where
+	block = (`elem` "\\λ")
+
+instance Restriction "NoPrime" where
+	block = (== '\'')
+
+type LambdaSafe = AsSet ["NoLambda", "NoPrime", "NoWhitespace", "NoParens"]

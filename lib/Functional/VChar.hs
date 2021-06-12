@@ -21,7 +21,7 @@ module Functional.VChar
 import ValidLiterals (Validate, fromLiteral, Lift)
 import Data.Type.Set (Union, AsSet, Cmp)
 import Data.Char (isSpace)
-import Text.Parsec (ParsecT, Stream, try)
+import Text.Parsec (ParsecT, Stream, try, getPosition, setPosition)
 import Text.Parsec.Char (anyChar)
 import GHC.TypeLits (Symbol, CmpSymbol)
 
@@ -63,10 +63,11 @@ instance (Restriction r, Validate Char (VChar rs)) =>
 -- Parser for any validated char
 charParser :: (Validate Char t, Stream s m Char) => ParsecT s u m t
 charParser = try $ do
+	charPos <- getPosition
 	x <- anyChar
 	case fromLiteral x of
 		Just y -> pure y
-		Nothing -> fail "Failed to validate char"
+		Nothing -> setPosition charPos *> fail "Failed to validate char"
 
 -- Loosen the requirements on a char. Using type applications to specify s and t
 -- is recommended

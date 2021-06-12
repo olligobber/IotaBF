@@ -1,4 +1,4 @@
-import Text.Parsec (ParseError, parse, (<|>))
+import Text.Parsec (ParseError, parse, (<|>), eof)
 import Control.Monad ((<=<))
 import Data.Char (isSpace)
 import System.Environment (getArgs)
@@ -12,7 +12,7 @@ import Functional.SKI (SKI)
 parseIota ::
 	String -> Either ParseError (BinaryTree (Either (VChar IotaSafe) Iota))
 parseIota = parse
-	(treeParserL $ Left <$> charParser <|> Right <$> iotaParser)
+	(treeParserL (Left <$> charParser <|> Right <$> iotaParser) <* eof)
 	"Standard Input"
 
 type Reductant = Either (Either (VChar IotaSafe) Iota) SKI

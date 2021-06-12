@@ -1,8 +1,9 @@
 import Control.Monad ((<=<))
 import Text.Parsec (parse, ParseError)
 import Data.Char (isSpace)
+import Data.Type.Set (Union)
 
-import Functional.Lambda (Lambda, lambdaParser)
+import Functional.Lambda (Lambda, lambdaParser, LambdaSafe)
 import Functional.BinaryTree (BinaryTree, renderL)
 import Functional.Iota (Iota, renderIota, IotaSafe)
 import Functional.VChar (VChar, charParser, renderVChar)
@@ -13,10 +14,12 @@ convert :: Lambda x -> BinaryTree (Either x Iota)
 convert =
 	either (pure . Left) (fmap Right . I.fromSKI) <=< LSKI.toSKI . fmap Left
 
-parseLambda :: String -> Either ParseError (Lambda (VChar IotaSafe))
+type FreeVar = VChar (Union IotaSafe LambdaSafe)
+
+parseLambda :: String -> Either ParseError (Lambda FreeVar)
 parseLambda = parse (lambdaParser charParser) "Standard Input"
 
-showIota :: BinaryTree (Either (VChar IotaSafe) Iota) -> String
+showIota :: BinaryTree (Either FreeVar Iota) -> String
 showIota = renderL (either renderVChar renderIota)
 
 -- Convert lambda calculus to iota
