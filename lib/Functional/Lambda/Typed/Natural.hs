@@ -37,9 +37,9 @@ import Functional.Lambda.Typed.Eq (LambdaEq(..))
 import Functional.Decode (Decode(..))
 import Functional.Reducible (($$))
 import Functional.Lambda.Typed.Tuple (toFTuple2, mkTuple2, get1of2, get2of2)
-import Functional.Lambda.Typed.Render (LambdaShow(..), RenderS, TypedRenderS)
+import Functional.Lambda.Typed.Render
+	(LambdaShow(..), RenderS, TypedRenderS, VerySafe)
 import Functional.VChar (VChar)
-import Functional.Iota (IotaSafe)
 import Functional.Lambda.Typed.Semigroup (cat)
 
 -- Functional equivalent of natural numbers, composes its first input n times
@@ -86,7 +86,7 @@ instance LambdaShow Natural where
 	-- to remove the last digit and recurse on the leading digits
 	show = fix $$$ showF where
 		showF :: TypedLambda
-			((Natural -> RenderS) -> Natural -> RenderS) (VChar IotaSafe)
+			((Natural -> RenderS) -> Natural -> RenderS) (VChar VerySafe)
 		showF = abstract $ abstract $
 			magicIf $$$
 				(isZero $$$ liftInput (input :: TypedInput 1 Natural)) $$$

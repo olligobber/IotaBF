@@ -7,7 +7,8 @@
 {-# LANGUAGE InstanceSigs #-}
 
 module Functional.Lambda.Typed.Render
-	( Rendering
+	( VerySafe
+	, Rendering
 	, RenderS
 	, fromString
 	, fromStringS
@@ -26,11 +27,15 @@ import qualified Functional.Lambda as L
 import Functional.Reducible (($$))
 import Functional.VChar (VChar)
 import Functional.Iota (IotaSafe)
+import Functional.Lambda (LambdaSafe)
 import Functional.Lambda.Typed.Semigroup (LambdaSemigroup, cat)
 import NatTypes (S(S,Z))
 
 import Prelude hiding (id, show, flip)
 import ValidLiterals (Validate(..), Lift)
+import Data.Type.Set (Union)
+
+type VerySafe = Union IotaSafe LambdaSafe
 
 -- Represents a string of free variables, or the identity
 data Rendering
@@ -38,8 +43,8 @@ data Rendering
 -- Allows for concatenation via function composition
 type RenderS = Rendering -> Rendering
 
-type TypedRenderS = TypedLambda RenderS (VChar IotaSafe)
-type TypedRendering = TypedLambda Rendering (VChar IotaSafe)
+type TypedRenderS = TypedLambda RenderS (VChar VerySafe)
+type TypedRendering = TypedLambda Rendering (VChar VerySafe)
 
 fromString :: Validate Char c => String -> Maybe (TypedLambda Rendering c)
 fromString "" = Just $ reType id
@@ -63,13 +68,13 @@ instance (Lift c, Validate Char c) =>
 		fromLiteral = fromStringS
 
 class LambdaShow t where
-	show :: TypedLambda (t -> RenderS) (VChar IotaSafe)
+	show :: TypedLambda (t -> RenderS) (VChar VerySafe)
 
 class LambdaRender t where
-	render :: TypedLambda (t -> Rendering) (VChar IotaSafe)
+	render :: TypedLambda (t -> Rendering) (VChar VerySafe)
 
 instance LambdaShow t => LambdaRender t where
-	render :: TypedLambda (t -> Rendering) (VChar IotaSafe)
+	render :: TypedLambda (t -> Rendering) (VChar VerySafe)
 	render = abstract $
 		liftFree show $$$
 		liftInput (input :: TypedInput 1 t) $$$

@@ -1,5 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeApplications #-}
 
 module PrintLambdasTemplate
 	( FunctionEntry(..)
@@ -8,17 +9,19 @@ module PrintLambdasTemplate
 
 import qualified Language.Haskell.TH as TH
 
-import Functional.Lambda (Lambda)
-import Functional.Lambda.Typed (fromTyped)
+import Functional.Lambda (Lambda, LambdaSafe)
+import Functional.Lambda.Typed (fromTyped, TypedLambda)
 import THPrintType (printType)
-import Functional.VChar (VChar)
-import Functional.Iota (IotaSafe)
+import Functional.VChar (VChar, release)
+import Functional.Lambda.Typed.Render (VerySafe)
+-- import Functional.Iota (IotaSafe)
 
 data FunctionEntry = FunctionEntry
 	{ name :: String
 	, description :: String
 	, ltype :: String
-	, lambda :: Lambda (VChar IotaSafe)
+	, lambda :: Lambda (VChar LambdaSafe)
+	-- , iota :: TODO
 	}
 
 -- Test if a type constructor is for typed lambda calculus
@@ -48,4 +51,9 @@ makeEntry function desc = do
 		showType = case printType lambdaType of
 			Just s -> s
 			Nothing -> TH.pprint lambdaType
-	[| FunctionEntry function desc showType (fromTyped $(TH.varE fname)) |]
+	[| FunctionEntry
+		function
+		desc
+		showType
+		((release @LambdaSafe @VerySafe) <$> fromTyped $(TH.varE fname))
+		|]
