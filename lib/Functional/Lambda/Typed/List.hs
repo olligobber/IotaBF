@@ -21,6 +21,7 @@ module Functional.Lambda.Typed.List
 	, foldr
 	, foldl
 	, reverse
+	, replicate
 	, repeat
 	, cycle
 	, elem
@@ -32,6 +33,7 @@ module Functional.Lambda.Typed.List
 import Prelude hiding
 	( const, maybe, map, uncurry, head, last, tail, init, null, foldr, reverse
 	, flip, id, foldl, repeat, cycle, elem, or, filter, zipWith, zip, and, show
+	, replicate
 	)
 import qualified Prelude as P
 import ValidLiterals (valid)
@@ -51,6 +53,7 @@ import Functional.Decode (Decode(..))
 import Functional.Reducible (($$))
 import Functional.Lambda.Typed.Render (LambdaShow, show, TypedRenderS, RenderS)
 import Functional.Lambda.Typed.Semigroup (LambdaSemigroup, cat)
+import Functional.Lambda.Typed.Natural (Natural, toFNatural)
 
 -- Functional equivalent of list type, basically does foldr
 type FList a b = b -> (a -> b -> b) -> b
@@ -308,6 +311,14 @@ repeat = reType repeatF where
 			liftInput (input :: TypedInput 1 (a -> b -> b)) $$$
 			(input :: TypedInput 3 a)
 		)
+
+replicate :: forall a. TypedCombinator (Natural -> a -> [a])
+replicate = toCombinator $ abstract $ abstract $
+	toFNatural (input :: TypedInput 2 Natural) $$$ (
+		cons $$$
+		liftInput (input :: TypedInput 1 a)
+	) $$$
+	empty
 
 cycle :: forall a. TypedCombinator ([a] -> [a])
 cycle = reType cycleF where

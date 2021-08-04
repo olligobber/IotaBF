@@ -40,6 +40,7 @@ library
                       , Functional.Lambda.Typed
                       , Functional.Lambda.Typed.Bool
                       , Functional.Lambda.Typed.Eq
+                      , Functional.Lambda.Typed.FixedList
                       , Functional.Lambda.Typed.Function
                       , Functional.Lambda.Typed.Functor
                       , Functional.Lambda.Typed.List

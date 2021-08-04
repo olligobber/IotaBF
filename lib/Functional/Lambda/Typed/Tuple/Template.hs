@@ -335,6 +335,34 @@ instanceFunctor n = do
 	TH.instanceD (pure []) result
 		[TH.funD (TH.mkName "map") [TH.clause [] (TH.normalB mapDef) []]]
 
+-- -- Convert tuple to a list
+-- declToListN :: Int -> TH.Q [TH.Dec]
+-- declToListN n = do
+-- 	typeVar <- TH.newName "a"
+-- 	let
+-- 		paramType = TH.varT typeVar
+-- 		inputType = tupleN $ replicate n paramType
+-- 		outputType = [t| [ $paramType ] |]
+-- 		makeList = foldl
+-- 			(\l m -> [|
+-- 				cons $$$
+-- 				liftInput (input :: TypedInput $(typeLit m) $paramType) $$$
+-- 				l
+-- 			|])
+-- 			empty
+-- 			[1..n]
+-- 		toListDef = [| toCombinator $ abstract $
+-- 			$(toFTupleN n) (input :: TypedInput 1 $inputType) $$$
+-- 			$(abstractN n makeList)
+-- 			|]
+-- 		functionName = "toList" <> show n
+-- 	typeDeclaration <- TH.sigD functionName $
+-- 		TH.forallT [TH.plainTV typeVar] (pure [])
+-- 		[t| TypedCombinator ($inputType -> $outputType) |]
+-- 	funDeclaration <-
+-- 		TH.funD functionName [TH.clause [] (TH.normalB toListDef) []]
+-- 	pure [typeDeclaration, funDeclaration]
+
 -- Generates all declarations needed for an n-tuple
 generateTuple :: Int -> TH.Q [TH.Dec]
 generateTuple n = join <$> sequenceA
@@ -348,6 +376,7 @@ generateTuple n = join <$> sequenceA
 	, pure <$> instanceShow n
 	, pure <$> instanceSemigroup n
 	, pure <$> instanceFunctor n
+	-- , declToListN n
 	]
 
 -- Generate all declarations for tuples of size 2 to n

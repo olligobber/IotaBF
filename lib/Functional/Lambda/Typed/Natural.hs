@@ -5,7 +5,8 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Functional.Lambda.Typed.Natural
-	( FNatural
+	( Natural
+	, FNatural
 	, toFNatural
 	, fromFNatural
 	, succ
